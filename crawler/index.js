@@ -10,18 +10,23 @@ const crawler = () => {
     .pipe(csv())
     .on("data", data => result.push(data))
     .on("end", () => {
-      result.forEach(data => {
-        const enrollment = new Date(data["입사일"]);
-        if (data["소속"].length) {
-          const newCell = new Cell({
-            cell: data["소속"]
-          }).save();
+      result.forEach(async data => {
+        try {
+          const enrolledIn = new Date(data["입사일"]);
+          const existingCell = await Cell.findOne({ cell: data["소속"] });
+          const cell = existingCell
+            ? existingCell
+            : new Cell({
+                cell: data["소속"]
+              }).save();
 
-          const newMember = new Member({
+          new Member({
             nickName: data["닉네임"],
-            cell: newCell._id,
-            enrolledIn: enrollment
+            cell: cell._id,
+            enrolledIn
           }).save();
+        } catch (err) {
+          return err;
         }
       });
     });
