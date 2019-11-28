@@ -1,4 +1,5 @@
 const memberServices = require("services/member");
+const Member = require("models/member");
 
 const makeError = (err, status) => {
   console.log(err);
@@ -15,20 +16,24 @@ exports.memberList = async (req, res) => {
   }
 };
 
-exports.addMember = async (req, res) => {
+exports.addMember = (req, res) => {
   try {
-    const data = req.body.data;
+    const { name, nickName, cell, enrolledIn } = req.body;
 
-    console.log(req.body);
-    res.send(data);
+    const newMember = new Member({
+      name,
+      nickName,
+      cell,
+      enrolledIn
+    });
+
+    res.status(200).json({
+      message: "Member Created",
+      newMember
+    });
   } catch (err) {
     makeError(err, 500);
   }
 };
 
-const memberData = {
-  name: "real name",
-  nickName: "my nickName",
-  cell: "new Cell",
-  enrolledIn: "2015. 9. 21"
-};
+exports.updateMemberDetails = (req, res) => {};

@@ -6,20 +6,19 @@ const fs = require("fs");
 const crawler = () => {
   const result = [];
 
-  fs.createReadStream("./raw_data.csv")
+  fs.createReadStream("crawler/groupMeal.csv")
     .pipe(csv())
     .on("data", data => result.push(data))
     .on("end", () => {
       result.forEach(data => {
         const enrollment = new Date(data["입사일"]);
-        if (data["직무"].length) {
+        if (data["소속"].length) {
           const newCell = new Cell({
-            cell: data["직무"]
+            cell: data["소속"]
           }).save();
 
           const newMember = new Member({
-            name: data["닉네임"],
-            nickName: data["이름"],
+            nickName: data["닉네임"],
             cell: newCell._id,
             enrolledIn: enrollment
           }).save();
