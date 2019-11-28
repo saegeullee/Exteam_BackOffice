@@ -1,10 +1,6 @@
 const memberServices = require("services/member");
 const Member = require("models/member");
-
-const makeError = (err, status) => {
-  console.log(err);
-  res.status(status).json({ error: err.message });
-};
+const Cell = require("models/cell");
 
 exports.memberList = async (req, res) => {
   try {
@@ -12,28 +8,36 @@ exports.memberList = async (req, res) => {
 
     res.status(200).json(members);
   } catch (err) {
-    makeError(err, 500);
+    res.status(500).json({ message: err.message });
   }
 };
 
-exports.addMember = (req, res) => {
+exports.addMember = async (req, res) => {
   try {
-    const { name, nickName, cell, enrolledIn } = req.body;
-
-    const newMember = new Member({
-      name,
-      nickName,
-      cell,
-      enrolledIn
-    });
+    const member = await memberServices.addNewMember(req);
 
     res.status(200).json({
-      message: "Member Created",
-      newMember
+      message: "Success",
+      member
     });
   } catch (err) {
-    makeError(err, 500);
+    const member = err.keyValue.nickName;
+
+    res.status(400).json({ message: `member '${member}' already exists` });
   }
 };
 
-exports.updateMemberDetails = (req, res) => {};
+exports.updateMemberDetails = async (req, res) => {
+  try {
+    const member = await memberServices.updateMember(req);
+
+    !member
+      ? res.status(400).json({ message: "Not a Member" })
+      : res.status(200).json({
+          message: "success",
+          member
+        });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
