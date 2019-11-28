@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 const memberSchema = new Schema({
-  nickName: String,
+  nickName: { type: String, unique: true },
   cell: { type: Schema.Types.ObjectId, ref: "Cell" },
   enrolledIn: Date,
   wasDriver: { type: Boolean, default: false }
