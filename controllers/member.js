@@ -8,7 +8,7 @@ exports.memberList = async (req, res) => {
 
     res.status(200).json(members);
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ error: err.message });
   }
 };
 
@@ -18,12 +18,12 @@ exports.addMember = async (req, res) => {
 
     res.status(200).json({
       message: "Success",
-      member
+      created: member
     });
   } catch (err) {
     const member = err.keyValue.nickName;
 
-    res.status(400).json({ message: `member '${member}' already exists` });
+    res.status(400).json({ error: `member '${member}' already exists` });
   }
 };
 
@@ -32,11 +32,32 @@ exports.updateMemberDetails = async (req, res) => {
     const member = await memberServices.updateMember(req);
 
     !member
-      ? res.status(400).json({ message: "Not a Member" })
+      ? res.status(400).json({ error: "Not a Member" })
       : res.status(200).json({
           message: "success",
-          member
+          updated: member
         });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.deleteMember = async (req, res) => {
+  try {
+    const memberId = req.params.memberId;
+
+    const deleted = await Member.findOne({ _id: memberId }).populate(
+      "cell",
+      "name"
+    );
+    await Member.deleteOne({ _id: memberId });
+
+    deleted
+      ? res.status(200).json({
+          message: "success",
+          deleted
+        })
+      : res.status(400).json({ error: "Member does not exist" });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
