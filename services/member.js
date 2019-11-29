@@ -41,3 +41,14 @@ exports.updateMember = async req => {
 
   return Member.findOne({ _id: memberId }).populate("cell", "name");
 };
+
+exports.deleteMember = async memberId => {
+  const toBeDeleted = await Member.findOne({ _id: memberId }).populate(
+    "cell",
+    "name"
+  );
+
+  await Member.deleteOne({ _id: memberId });
+
+  return toBeDeleted;
+};
