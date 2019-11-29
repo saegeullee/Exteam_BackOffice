@@ -1,7 +1,9 @@
 const memberRouter = require("./member");
+const cellRouter = require("./cell");
 
 const router = app => {
   app.use("/member", memberRouter);
+  app.use("/cell", cellRouter);
 
   app.all("*", (req, res, next) => {
     const err = new Error(`can't find ${req.originalUrl} on this server`);

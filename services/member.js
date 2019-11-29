@@ -43,12 +43,12 @@ exports.updateMember = async req => {
 };
 
 exports.deleteMember = async memberId => {
-  const deleted = await Member.findOne({ _id: memberId }).populate(
+  const toBeDeleted = await Member.findOne({ _id: memberId }).populate(
     "cell",
     "name"
   );
 
   await Member.deleteOne({ _id: memberId });
 
-  return deleted;
+  return toBeDeleted;
 };
