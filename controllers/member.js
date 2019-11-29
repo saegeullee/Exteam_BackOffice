@@ -26,7 +26,7 @@ exports.addMember = async (req, res) => {
   } catch (err) {
     const member = err.keyValue.nickName;
 
-    res.status(400).json({ error: `member '${member}' already exists` });
+    res.status(409).json({ error: `member '${member}' already exists` });
   }
 };
 
@@ -51,13 +51,13 @@ exports.deleteMember = async (req, res) => {
 
     const deleted = await deleteMember(memberId);
 
-    deleted
-      ? res.status(200).json({
+    !deleted
+      ? res.status(400).json({ error: "Member does not exist" })
+      : res.status(200).json({
           message: "success",
           deleted
-        })
-      : res.status(400).json({ error: "Member does not exist" });
+        });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ error: err.message });
   }
 };
