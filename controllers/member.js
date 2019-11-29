@@ -1,6 +1,3 @@
-const Member = require("models/member");
-const Cell = require("models/cell");
-
 const {
   getMemberList,
   addNewMember,
