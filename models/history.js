@@ -3,7 +3,7 @@ const Schema = mongoose.Schema;
 
 const historySchema = new Schema(
   {
-    groups: [{ type: Schema.Types.ObjectId, ref: "Member" }]
+    history: [{ type: Schema.Types.ObjectId, ref: "Group" }]
   },
   { timestamps: true }
 );

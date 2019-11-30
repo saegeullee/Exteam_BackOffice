@@ -26,10 +26,7 @@ exports.updateMember = async req => {
   const { nickName, cell: name, enrolledIn } = req.body;
 
   const cell = name ? await Cell.findOne({ name }) : null;
-  const member = await Member.findOne({ _id: memberId }).populate(
-    "cell",
-    "_id"
-  );
+  const member = await Member.findOne({ _id: memberId }).populate("cell", "_id");
 
   const updates = {
     nickName: nickName || member.nickName,
@@ -43,10 +40,7 @@ exports.updateMember = async req => {
 };
 
 exports.deleteMember = async memberId => {
-  const toBeDeleted = await Member.findOne({ _id: memberId }).populate(
-    "cell",
-    "name"
-  );
+  const toBeDeleted = await Member.findOne({ _id: memberId }).populate("cell", "name");
 
   await Member.deleteOne({ _id: memberId });
 
