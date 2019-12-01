@@ -1,19 +1,21 @@
-const Member = require("models/member");
 const { shuffle } = require("lodash");
 const memberService = require("services/member");
 const groupMealService = require("services/groupMeal");
+const CONSTANT = require("utils/constant");
 
 class GroupMealsGeneratingService {
   constructor() {}
 
   async getGroupMeals() {
     this.members = await this.getMembers();
-    this.MEMBER_NUM = 4;
-    this.TOTAL_PEOPLE_NUM = this.members.length;
-    this.TEAM_NUM = this.TOTAL_PEOPLE_NUM / this.MEMBER_NUM;
+    this.MEMBER_NUM = CONSTANT.MEMBER_NUM;
+    this.TOTAL_MEMBER_NUM = this.members.length;
+    this.TEAM_NUM = this.TOTAL_MEMBER_NUM / this.MEMBER_NUM;
 
     this.sortedCell = this.getSortedCell();
     const finalGroupMeals = await this.getFinalGroupMeals();
+    // await groupMealService.saveGroupMealHistory(finalGroupMeals);
+    console.log(finalGroupMeals);
     return finalGroupMeals;
   }
 
@@ -47,11 +49,12 @@ class GroupMealsGeneratingService {
           if (!groupByCellMembersObj[`${sortedCell[i]}`]) {
             groupByCellMembersObj[`${sortedCell[i]}`] = [];
           }
+          const { _id, nickName, wasDriver, enrolledIn } = this.members[j];
           groupByCellMembersObj[`${sortedCell[i]}`].push({
-            _id: this.members[j]._id,
-            nickName: this.members[j].nickName,
-            wasDriver: this.members[j].wasDriver,
-            enrolledIn: this.members[j].enrolledIn
+            _id: _id,
+            nickName: nickName,
+            wasDriver: wasDriver,
+            enrolledIn: enrolledIn
           });
         }
       }
@@ -62,19 +65,6 @@ class GroupMealsGeneratingService {
     });
 
     return groupByCellMembersObj;
-  }
-
-  //This should go to saveGroupMealHistory in groupMeal Service
-  async updateDriversStateInDB(drivers) {
-    const driversIds = [];
-    for (let i = 0; i < drivers.length; i++) {
-      driversIds.push(drivers[i]._id);
-    }
-    const updatedMembers = await Member.updateMany(
-      { _id: { $in: driversIds } },
-      { $set: { wasDriver: true } },
-      { multi: true }
-    );
   }
 
   async assignDriversToGroupMeals(groupMeals, thisTermDriversArr) {
@@ -160,7 +150,7 @@ class GroupMealsGeneratingService {
     const groupHistoryForEachMembersObj = this.getHistoryOfSameGroupMemberForEachMembers(totalGroupMealHistory);
 
     const groupMealsEvaluatedResults = await Promise.all(
-      [...Array(100)].map(async el => {
+      [...Array(1000)].map(async el => {
         const groupByCellMembersObj = this.getGroupedByCellMembersObj(this.sortedCell);
         const groupMeals = await this.generateGroupMeals(groupByCellMembersObj);
         return this.evaluateGeneratedGroupMeals(groupHistoryForEachMembersObj, groupMeals);
@@ -169,8 +159,7 @@ class GroupMealsGeneratingService {
     const bestResult = groupMealsEvaluatedResults.find(
       el => el.totalPoint === Math.min(...groupMealsEvaluatedResults.map(el => el.totalPoint))
     );
-    console.log(bestResult);
-    return bestResult.groupMeals;
+    return shuffle(bestResult.groupMeals);
   }
 
   evaluateGeneratedGroupMeals(groupHistoryForEachMembersObj, groupMeals) {
@@ -225,22 +214,13 @@ class GroupMealsGeneratingService {
     Object.keys(groupByCellMembersObj).forEach(key => {
       const currentCellMembersArr = groupByCellMembersObj[`${key}`];
       for (let i = 0; i < currentCellMembersArr.length; i++) {
-        if (Date.now() - new Date(currentCellMembersArr[i].enrolledIn).getTime() > 1000 * 60 * 60 * 24 * 14) {
+        if (Date.now() - new Date(currentCellMembersArr[i].enrolledIn).getTime() > CONSTANT.NEW_MEMBER_STANDARD) {
           if (!currentCellMembersArr[i].wasDriver) {
             potentialDriversArr.push(currentCellMembersArr[i]);
           }
         }
       }
     });
-
-    //should move this logic to groupmeals services so that it should check whenever there is a groupHistory save
-    if (potentialDriversArr.length < this.TEAM_NUM) {
-      const resetResult = await groupMealService.resetAllMembersWasDriverFieldFalse();
-      if (resetResult.ok === 1) {
-        console.log("successfully updated all members wasdriver field false");
-        this.generateGroupMeals();
-      }
-    }
 
     return potentialDriversArr;
   }
