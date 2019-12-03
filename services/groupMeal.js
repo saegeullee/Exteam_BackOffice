@@ -9,6 +9,8 @@ exports.getGroupMeals = async () => {
   const groupMeal = await groupMeals.getGroupMeals();
   return groupMeal;
 };
+
+//클라이언트에서 요청하는 서비스, 클라이언트에는 저번 점술조 1개의 히스토리만 보여줌.
 exports.getLastGroupMealHistory = async () => {
   let lastGroupMealHistory = await History.find()
     .populate({
@@ -21,12 +23,14 @@ exports.getLastGroupMealHistory = async () => {
   return lastGroupMealHistory;
 };
 
+//내부 로직에서 새로운 점술조 생성할 때 사용, 저난 2개의 히스토리를 참고하여 새로운 점술조 생성.
 exports.getLastGroupMealHistories = async () => {
-  let lastGroupMealHistories = await History.find({}, {}, { sort: { createdAt: -1 } })
+  let lastGroupMealHistories = await History.find()
     .populate({
       path: "history",
       populate: { path: "group" }
     })
+    .sort("-createdAt")
     .limit(2);
 
   return lastGroupMealHistories;
@@ -75,13 +79,17 @@ updateDriversStateInDB = async driversIds => {
     console.log("successfully updated drivers state in db");
   }
 
+  identifyIfTheresEnoughDriversForNextTerm();
+};
+
+identifyIfTheresEnoughDriversForNextTerm = async () => {
   const numOfMembersWhoHaveNotDoneDrivers = await Member.find({ wasDriver: false }).count();
   const numOfNewlyJoinedMember = await Member.find({
     enrolledIn: { $gte: new Date(new Date() - CONSTANT.NEW_MEMBER_STANDARD) }
   }).count();
   const POTENTIAL_DRIVERS_NUM = numOfMembersWhoHaveNotDoneDrivers - numOfNewlyJoinedMember;
   const TOTAL_MEMBER_NUM = await Member.find().count();
-  const TEAM_NUM = TOTAL_MEMBER_NUM / CONSTANT.MEMBER_NUM;
+  const TEAM_NUM = Math.floor(TOTAL_MEMBER_NUM / CONSTANT.MEMBER_NUM);
 
   if (TEAM_NUM > POTENTIAL_DRIVERS_NUM) {
     resetAllMembersWasDriverFieldFalse();
