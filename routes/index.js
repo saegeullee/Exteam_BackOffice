@@ -1,11 +1,15 @@
 const memberRouter = require("./member");
 const cellRouter = require("./cell");
 const groupMealRouter = require("./groupMeal");
+const slackAuthRouter = require("./slackAuth");
+const adminRouter = require("./admin");
 
 const router = app => {
   app.use("/member", memberRouter);
   app.use("/cell", cellRouter);
   app.use("/groupmeal", groupMealRouter);
+  app.use("/slack", slackAuthRouter);
+  app.use("/admin", adminRouter);
 
   app.all("*", (req, res, next) => {
     const err = new Error(`can't find ${req.originalUrl} on this server`);
