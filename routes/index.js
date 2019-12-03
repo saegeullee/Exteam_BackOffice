@@ -4,11 +4,14 @@ const groupMealRouter = require("./groupMeal");
 const slackAuthRouter = require("./slackAuth");
 const adminRouter = require("./admin");
 
+const { checkAuth } = require("controllers/slackAuth");
+
 const router = app => {
+  app.use("/slack", slackAuthRouter);
+  app.use(checkAuth);
   app.use("/member", memberRouter);
   app.use("/cell", cellRouter);
   app.use("/groupmeal", groupMealRouter);
-  app.use("/slack", slackAuthRouter);
   app.use("/admin", adminRouter);
 
   app.all("*", (req, res, next) => {
