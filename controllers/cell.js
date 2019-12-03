@@ -1,4 +1,3 @@
-const Cell = require("models/cell");
 const {
   getCellList,
   makeNewCell,
