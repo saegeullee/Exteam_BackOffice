@@ -10,11 +10,10 @@ class GroupMealsGeneratingService {
     this.members = await this.getMembers();
     this.MEMBER_NUM = CONSTANT.MEMBER_NUM;
     this.TOTAL_MEMBER_NUM = this.members.length;
-    this.TEAM_NUM = this.TOTAL_MEMBER_NUM / this.MEMBER_NUM;
+    this.TEAM_NUM = Math.floor(this.TOTAL_MEMBER_NUM / this.MEMBER_NUM);
 
     this.sortedCell = this.getSortedCell();
     const finalGroupMeals = await this.getFinalGroupMeals();
-    // await groupMealService.saveGroupMealHistory(finalGroupMeals);
     console.log(finalGroupMeals);
     return finalGroupMeals;
   }
@@ -100,7 +99,7 @@ class GroupMealsGeneratingService {
 
     let totalHistoryMap = [];
     for (let i = 0; i < lastGroupMealHistories.length; i++) {
-      let lastGroupMealsHistoryMap = [...Array(this.TEAM_NUM)].map(() => Array(this.MEMBER_NUM).fill(""));
+      let lastGroupMealsHistoryMap = [...Array(this.TEAM_NUM)].map(() => Array(this.MEMBER_NUM + 1).fill(""));
       for (let j = 0; j < lastGroupMealHistories[i].history.length; j++) {
         let currentGroup = [];
         for (let k = 0; k < lastGroupMealHistories[i].history[j].group.length; k++) {
@@ -115,7 +114,7 @@ class GroupMealsGeneratingService {
   }
 
   async generateGroupMeals(groupByCellMembersObj) {
-    let groupMeals = [...Array(this.TEAM_NUM)].map(() => Array(this.MEMBER_NUM).fill(""));
+    let groupMeals = [...Array(this.TEAM_NUM)].map(() => Array(this.MEMBER_NUM + 1).fill(""));
 
     const thisTermDriversArr = await this.getThisTermDrivers(groupByCellMembersObj);
     groupMeals = await this.assignDriversToGroupMeals(groupMeals, thisTermDriversArr);
@@ -156,10 +155,22 @@ class GroupMealsGeneratingService {
         return this.evaluateGeneratedGroupMeals(groupHistoryForEachMembersObj, groupMeals);
       })
     );
-    const bestResult = groupMealsEvaluatedResults.find(
+    let bestResult = groupMealsEvaluatedResults.find(
       el => el.totalPoint === Math.min(...groupMealsEvaluatedResults.map(el => el.totalPoint))
     );
-    return shuffle(bestResult.groupMeals);
+
+    return this.cleanUpAndSortGroupMealsResult(bestResult.groupMeals);
+  }
+
+  cleanUpAndSortGroupMealsResult(result) {
+    let finalResult = [];
+    result = shuffle(result);
+    for (let i = 0; i < result.length; i++) {
+      finalResult.push(result[i].filter(el => el !== ""));
+    }
+    let resultPartial = finalResult.filter(group => group.length === this.MEMBER_NUM);
+    finalResult = resultPartial.concat(finalResult.filter(group => group.length === this.MEMBER_NUM + 1));
+    return finalResult;
   }
 
   evaluateGeneratedGroupMeals(groupHistoryForEachMembersObj, groupMeals) {
@@ -167,11 +178,15 @@ class GroupMealsGeneratingService {
     for (let i = 0; i < groupMeals.length; i++) {
       let groupEvaluatePoint = 0;
       for (let j = 0; j < groupMeals[i].length; j++) {
-        let membersWhoWereInSameGroup = groupHistoryForEachMembersObj[`${groupMeals[i][j]}`];
-        for (let k = 0; k < groupMeals[i].length; k++) {
-          for (let l = 0; l < membersWhoWereInSameGroup.length; l++) {
-            if (groupMeals[i][k] === membersWhoWereInSameGroup[l]) {
-              groupEvaluatePoint += 1;
+        if (groupMeals[i][j]) {
+          let membersWhoWereInSameGroup = groupHistoryForEachMembersObj[`${groupMeals[i][j]}`];
+          if (membersWhoWereInSameGroup) {
+            for (let k = 0; k < groupMeals[i].length; k++) {
+              for (let l = 0; l < membersWhoWereInSameGroup.length; l++) {
+                if (groupMeals[i][k] === membersWhoWereInSameGroup[l]) {
+                  groupEvaluatePoint += 1;
+                }
+              }
             }
           }
         }
