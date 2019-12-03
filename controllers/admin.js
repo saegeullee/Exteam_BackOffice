@@ -2,7 +2,9 @@ const { getAdminList, createAdmin, deleteAdmin } = require("services/admin");
 
 exports.adminList = async (req, res) => {
   try {
-    const admins = await getAdminList();
+    const adminId = req.adminId;
+
+    const admins = await getAdminList(adminId);
 
     res.status(200).json({
       message: "success",
