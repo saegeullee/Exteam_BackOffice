@@ -1,7 +1,7 @@
 const Admin = require("models/admin");
 
-exports.getAdminList = async () => {
-  const admins = await Admin.find();
+exports.getAdminList = async adminId => {
+  const admins = await Admin.find({ _id: { $ne: adminId } });
 
   return admins;
 };
@@ -12,7 +12,7 @@ exports.createAdmin = async data => {
   return admin;
 };
 
-exports.deleteAdmin = async () => {
+exports.deleteAdmin = async adminId => {
   const adminToBeDeleted = await Admin.findOne({ _id: adminId });
 
   await Admin.deleteOne({ _id: adminToBeDeleted._id });
