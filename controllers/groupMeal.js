@@ -1,16 +1,17 @@
 const groupMealService = require("services/groupMeal");
+const catchAsync = require("utils/catchAsync");
 
-exports.getGroupMeals = async (req, res, next) => {
+exports.getGroupMeals = catchAsync(async (req, res, next) => {
   const groupMeal = await groupMealService.getGroupMeals();
   res.status(200).json(groupMeal);
-};
+});
 
-exports.getLastGroupMealHistory = async (req, res, next) => {
+exports.getLastGroupMealHistory = catchAsync(async (req, res, next) => {
   const groupMealHistory = await groupMealService.getLastGroupMealHistory();
   res.status(200).json(groupMealHistory);
-};
+});
 
-exports.saveGroupMealHistory = async (req, res, next) => {
+exports.saveGroupMealHistory = catchAsync(async (req, res, next) => {
   const result = await groupMealService.saveGroupMealHistory(req, res, next);
   if (result === "success") {
     res.status(200).json({
@@ -20,4 +21,4 @@ exports.saveGroupMealHistory = async (req, res, next) => {
   } else if (result === "NO_GROUP_MEALS") {
     next({ message: "NO_GROUP_MEALS", statusCode: 400 });
   }
-};
+});
