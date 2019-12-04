@@ -24,6 +24,11 @@ exports.getLastGroupMealHistory = async () => {
 };
 
 //내부 로직에서 새로운 점술조 생성할 때 사용, 저난 2개의 히스토리를 참고하여 새로운 점술조 생성.
+/**
+ * 지난 2개의 히스토리 참고시(limit(2)) -> 새로 생성된 점술조에서 대략 2~3명정도 과거에 같은 점술조를 했던 멤버와 겹침
+ * 지난 4개의 히스토리 참고시(limit(4)) -> 새로 생성된 점술조에서 대략 6~8명정도 과거에 같은 점술조를 했던 멤버와 겹침
+ * 지난 6개의 히스토리 참고시(limit(6)) -> 새로 생성된 점술조에서 대략 10~15명정도 과거에 같은 점술조를 했던 멤버와 겹침
+ */
 exports.getLastGroupMealHistories = async () => {
   let lastGroupMealHistories = await History.find()
     .populate({
