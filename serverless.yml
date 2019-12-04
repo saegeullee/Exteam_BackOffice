@@ -1,0 +1,16 @@
+service: group-meal
+
+provider:
+  name: aws
+  runtime: nodejs10.x
+  region: ap-northeast-2
+  profile: Serverless-Deploy
+
+functions:
+  hello:
+    handler: handler.handler
+    environment:
+      PORT: 3030
+      MONGO_URI: mongodb://localhost:27017/groupMeal
+      JWT_SECRET: jum_sul_pan_secret_key
+      NODE_PATH: ./
