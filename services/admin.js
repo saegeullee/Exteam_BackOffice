@@ -1,7 +1,7 @@
 const Admin = require("models/admin");
 
-exports.getAdminList = async () => {
-  const admins = await Admin.find();
+exports.getAdminList = async adminId => {
+  const admins = await Admin.find({ _id: { $ne: adminId } });
 
   return admins;
 };
