@@ -7,7 +7,13 @@ exports.getAdminList = async adminId => {
 };
 
 exports.createAdmin = async data => {
-  const admin = await new Admin(data).save();
+  const regex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+
+  const email = data.email;
+
+  const isEmail = regex.test(email);
+
+  const admin = data !== {} && isEmail ? await new Admin(data).save() : null;
 
   return admin;
 };

@@ -9,10 +9,10 @@ const router = require("routes");
 const crawler = require("crawler");
 dotenv.config();
 
+app.use(cors());
 app.use(morgan("dev"));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
-app.use(cors());
 router(app);
 
 mongoose
