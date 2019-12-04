@@ -12,7 +12,7 @@ exports.createAdmin = async data => {
   return admin;
 };
 
-exports.deleteAdmin = async () => {
+exports.deleteAdmin = async adminId => {
   const adminToBeDeleted = await Admin.findOne({ _id: adminId });
 
   await Admin.deleteOne({ _id: adminToBeDeleted._id });
