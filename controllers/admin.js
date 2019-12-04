@@ -11,7 +11,7 @@ exports.adminList = async (req, res) => {
       admins
     });
   } catch (err) {
-    res.status(500).json({ err: err.message });
+    res.status(500).json({ error: err.message });
   }
 };
 
@@ -21,12 +21,14 @@ exports.newAdmin = async (req, res) => {
 
     const created = await createAdmin(data);
 
-    res.status(200).json({
-      message: "success",
-      created
-    });
+    created
+      ? res.status(200).json({
+          message: "success",
+          created
+        })
+      : res.status(400).json({ error: "Bad Request" });
   } catch (err) {
-    res.status(409).json({ err: "admin already exists" });
+    res.status(409).json({ error: "Admin already exists" });
   }
 };
 
@@ -42,6 +44,6 @@ exports.deletion = async (req, res) => {
     });
   } catch (err) {
     console.log(err);
-    res.status(500).json({ err: err.message });
+    res.status(500).json({ error: err.message });
   }
 };
