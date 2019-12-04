@@ -7,6 +7,7 @@ const CONSTANT = require("utils/constant");
 exports.getGroupMeals = async () => {
   const groupMeals = new GroupMealsGeneratingService();
   const groupMeal = await groupMeals.getGroupMeals();
+
   return groupMeal;
 };
 
