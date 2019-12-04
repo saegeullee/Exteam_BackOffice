@@ -1,6 +1,6 @@
-const { shuffle } = require("lodash");
 const memberService = require("services/member");
 const groupMealService = require("services/groupMeal");
+const { shuffle } = require("lodash");
 const CONSTANT = require("utils/constant");
 
 class GroupMealsGeneratingService {
@@ -159,6 +159,8 @@ class GroupMealsGeneratingService {
       el => el.totalPoint === Math.min(...groupMealsEvaluatedResults.map(el => el.totalPoint))
     );
 
+    console.log("bestResult");
+    console.log(bestResult.totalPoint);
     return this.cleanUpAndSortGroupMealsResult(bestResult.groupMeals);
   }
 
