@@ -1,5 +1,4 @@
 const groupMealService = require("services/groupMeal");
-const Group = require("models/group");
 
 exports.getGroupMeals = async (req, res, next) => {
   const groupMeal = await groupMealService.getGroupMeals();
@@ -21,15 +20,4 @@ exports.saveGroupMealHistory = async (req, res, next) => {
   } else if (result === "NO_GROUP_MEALS") {
     next({ message: "NO_GROUP_MEALS", statusCode: 400 });
   }
-};
-
-exports.testMongoose = async (req, res, next) => {
-  const group = await Group.find({}, {}, { sort: { createdAt: -1 } }).limit(2);
-  res.status(200).json({
-    group
-  });
-};
-
-exports.resetAllMembersWasDriverFieldFalse = async (req, res, next) => {
-  await groupMealService.resetAllMembersWasDriverFieldFalse();
 };
