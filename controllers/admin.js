@@ -19,12 +19,14 @@ exports.newAdmin = async (req, res) => {
 
     const created = await createAdmin(data);
 
-    res.status(200).json({
-      message: "success",
-      created
-    });
+    created !== {}
+      ? res.status(200).json({
+          message: "success",
+          created
+        })
+      : res.status(400).json({ err: "Bad Request" });
   } catch (err) {
-    res.status(409).json({ err: "admin already exists" });
+    res.status(409).json({ err: "Admin already exists" });
   }
 };
 
