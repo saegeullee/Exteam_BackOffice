@@ -18,12 +18,11 @@ router(app);
 mongoose
   .connect(process.env.MONGO_URI, {
     useNewUrlParser: true,
-    useUnifiedTopology: true,
-    useCreateIndex: true
+    useUnifiedTopology: true
   })
   .then(() => {
     console.log("DB Connected to " + process.env.MONGO_URI);
-    // crawler();
+   //crawler();
   })
   .catch(err => {
     console.log("DB Connection Error" + err.message);
