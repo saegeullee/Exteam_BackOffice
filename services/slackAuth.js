@@ -1,12 +1,12 @@
-const Axios = require("axios");
-const Admin = require("models/admin");
-const jwt = require("jsonwebtoken");
+const Axios = require('axios');
+const Admin = require('models/admin');
+const jwt = require('jsonwebtoken');
 
 exports.getSlackAuth = async req => {
   const { client_id, client_secret, code } = req.query;
 
   const response = await Axios.get(
-    `https://slack.com/api/oauth.access?client_id=${client_id}&client_secret=${client_secret}&code=${code}`
+    `https://slack.com/api/oauth.access?client_id=${client_id}&client_secret=${client_secret}&code=${code}`,
   );
 
   const { email } = response.data.user;
