@@ -1,9 +1,11 @@
-const Admin = require("models/admin");
+const Admin = require('models/admin');
 
 exports.getAdminList = async adminId => {
   const admins = await Admin.find({ _id: { $ne: adminId } });
 
-  return admins;
+  const result = notUs(admins);
+
+  return result;
 };
 
 exports.createAdmin = async data => {
@@ -24,4 +26,20 @@ exports.deleteAdmin = async adminId => {
   await Admin.deleteOne({ _id: adminToBeDeleted._id });
 
   return adminToBeDeleted;
+};
+
+const notUs = admins => {
+  const result = [];
+
+  admins.forEach(admin => {
+    if (
+      admin.email !== 'onikss793@gmail.com' &&
+      admin.email !== 'sehwanforeal@gmail.com' &&
+      admin.email !== 'lsg71011357@gmail.com'
+    ) {
+      result.push(admin);
+    }
+  });
+
+  return result;
 };
