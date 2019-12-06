@@ -1,0 +1,15 @@
+{ 
+
+        "apps": [{ 
+
+                "env": { 
+
+                        "NODE_PATH": "./" 
+
+                }, 
+
+                "script": "./server.js", 
+
+        }] 
+
+} 
