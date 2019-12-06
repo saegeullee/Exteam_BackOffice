@@ -2,62 +2,68 @@ const {
   getMemberList,
   addNewMember,
   updateMember,
-  deleteMember
-} = require("services/member");
+  deleteMember,
+} = require('services/member');
 
-exports.memberList = async (req, res) => {
+exports.memberList = async (req, res, next) => {
   try {
     const members = await getMemberList();
 
     res.status(200).json(members);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 };
 
-exports.addMember = async (req, res) => {
+exports.addMember = async (req, res, next) => {
   try {
-    const member = await addNewMember(req);
+    const created = await addNewMember(req);
 
-    res.status(200).json({
-      message: "Success",
-      created: member
-    });
+    if (!created instanceof Error) {
+      res.status(200).json({ message: 'Success', created });
+    } else {
+      const err = new Error('Check member data');
+      err.statusCode = 400;
+      next(err);
+    }
   } catch (err) {
     const member = err.keyValue.nickName;
-
-    res.status(409).json({ error: `member '${member}' already exists` });
+    err.message = `Member '${member}' already exists`;
+    err.statusCode = 409;
+    next(err);
   }
 };
 
-exports.updateMemberDetails = async (req, res) => {
+exports.updateMemberDetails = async (req, res, next) => {
   try {
-    const member = await updateMember(req);
+    const updated = await updateMember(req);
 
-    !member
-      ? res.status(400).json({ error: "Not a Member" })
-      : res.status(200).json({
-          message: "success",
-          updated: member
-        });
+    if (member) {
+      res.status(200).json({ message: 'success', updated });
+    } else {
+      const err = new Error('Not a member');
+      err.statusCode = 400;
+      next(err);
+    }
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 };
 
-exports.deleteMember = async (req, res) => {
+exports.deleteMember = async (req, res, next) => {
   try {
     const memberId = req.params.memberId;
 
     const deleted = await deleteMember(memberId);
 
-    !deleted
-      ? res.status(400).json({ error: "Member does not exist" })
-      : res.status(200).json({
-          message: "success",
-          deleted
-        });
+    if (deleted) {
+      res.status(200).json({ message: 'success', deleted });
+    } else {
+      const err = new Error('Member does not exist');
+      err.statusCode = 400;
+      next(err);
+    }
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 };
