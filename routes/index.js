@@ -9,7 +9,7 @@ const { checkAuth } = require('controllers/slackAuth');
 
 const router = app => {
   app.use('/slack', slackAuthRouter);
-  // app.use(checkAuth);
+  app.use(checkAuth);
   // app.use('/access', accessRouter);
   app.use('/member', memberRouter);
   app.use('/cell', cellRouter);
