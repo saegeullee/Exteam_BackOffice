@@ -1,25 +1,20 @@
-const memberService = require("services/member");
-const groupMealService = require("services/groupMeal");
-const { shuffle } = require("lodash");
-const CONSTANT = require("utils/constant");
+const memberService = require('services/member');
+const groupMealService = require('services/groupMeal');
+const { shuffle } = require('lodash');
+const CONSTANT = require('utils/constant');
 
 class GroupMealsGeneratingService {
   constructor() {}
 
   async getGroupMeals() {
-    this.members = await this.getMembers();
+    this.members = await memberService.getMemberList();
     this.MEMBER_NUM = CONSTANT.MEMBER_NUM;
     this.TOTAL_MEMBER_NUM = this.members.length;
     this.TEAM_NUM = Math.floor(this.TOTAL_MEMBER_NUM / this.MEMBER_NUM);
 
     this.sortedCell = this.getSortedCell();
     const finalGroupMeals = await this.getFinalGroupMeals();
-    console.log(finalGroupMeals);
     return finalGroupMeals;
-  }
-
-  async getMembers() {
-    return await memberService.getMemberList();
   }
 
   getSortedCell() {
@@ -66,7 +61,7 @@ class GroupMealsGeneratingService {
     return groupByCellMembersObj;
   }
 
-  async assignDriversToGroupMeals(groupMeals, thisTermDriversArr) {
+  assignDriversToGroupMeals(groupMeals, thisTermDriversArr) {
     for (let i = 0; i < thisTermDriversArr.length; i++) {
       groupMeals[i][0] = thisTermDriversArr[i].nickName;
     }
@@ -99,7 +94,7 @@ class GroupMealsGeneratingService {
 
     let totalHistoryMap = [];
     for (let i = 0; i < lastGroupMealHistories.length; i++) {
-      let lastGroupMealsHistoryMap = [...Array(this.TEAM_NUM)].map(() => Array(this.MEMBER_NUM + 1).fill(""));
+      let lastGroupMealsHistoryMap = [...Array(this.TEAM_NUM)].map(() => Array(this.MEMBER_NUM + 1).fill(''));
       for (let j = 0; j < lastGroupMealHistories[i].history.length; j++) {
         let currentGroup = [];
         for (let k = 0; k < lastGroupMealHistories[i].history[j].group.length; k++) {
@@ -113,11 +108,11 @@ class GroupMealsGeneratingService {
     return totalHistoryMap;
   }
 
-  async generateGroupMeals(groupByCellMembersObj) {
-    let groupMeals = [...Array(this.TEAM_NUM)].map(() => Array(this.MEMBER_NUM + 1).fill(""));
+  generateGroupMeals(groupByCellMembersObj) {
+    let groupMeals = [...Array(this.TEAM_NUM)].map(() => Array(this.MEMBER_NUM + 1).fill(''));
 
-    const thisTermDriversArr = await this.getThisTermDrivers(groupByCellMembersObj);
-    groupMeals = await this.assignDriversToGroupMeals(groupMeals, thisTermDriversArr);
+    const thisTermDriversArr = this.getThisTermDrivers(groupByCellMembersObj);
+    groupMeals = this.assignDriversToGroupMeals(groupMeals, thisTermDriversArr);
     groupByCellMembersObj = this.removeDriversFromCellMembersObj(groupByCellMembersObj, thisTermDriversArr);
 
     let currentRow = 1;
@@ -151,7 +146,7 @@ class GroupMealsGeneratingService {
     const groupMealsEvaluatedResults = await Promise.all(
       [...Array(1000)].map(async el => {
         const groupByCellMembersObj = this.getGroupedByCellMembersObj(this.sortedCell);
-        const groupMeals = await this.generateGroupMeals(groupByCellMembersObj);
+        const groupMeals = this.generateGroupMeals(groupByCellMembersObj);
         return this.evaluateGeneratedGroupMeals(groupHistoryForEachMembersObj, groupMeals);
       })
     );
@@ -159,8 +154,6 @@ class GroupMealsGeneratingService {
       el => el.totalPoint === Math.min(...groupMealsEvaluatedResults.map(el => el.totalPoint))
     );
 
-    console.log("bestResult");
-    console.log(bestResult.totalPoint);
     return this.cleanUpAndSortGroupMealsResult(bestResult.groupMeals);
   }
 
@@ -168,7 +161,7 @@ class GroupMealsGeneratingService {
     let finalResult = [];
     result = shuffle(result);
     for (let i = 0; i < result.length; i++) {
-      finalResult.push(result[i].filter(el => el !== ""));
+      finalResult.push(result[i].filter(el => el !== ''));
     }
     let resultPartial = finalResult.filter(group => group.length === this.MEMBER_NUM);
     finalResult = resultPartial.concat(finalResult.filter(group => group.length === this.MEMBER_NUM + 1));
@@ -226,7 +219,7 @@ class GroupMealsGeneratingService {
     return groupHistoryForEachMembersObj;
   }
 
-  async getPotentialDrivers(groupByCellMembersObj) {
+  getPotentialDrivers(groupByCellMembersObj) {
     const potentialDriversArr = [];
     Object.keys(groupByCellMembersObj).forEach(key => {
       const currentCellMembersArr = groupByCellMembersObj[`${key}`];
@@ -242,8 +235,8 @@ class GroupMealsGeneratingService {
     return potentialDriversArr;
   }
 
-  async getThisTermDrivers(groupByCellMembersObj) {
-    let potentialDriversArr = await this.getPotentialDrivers(groupByCellMembersObj);
+  getThisTermDrivers(groupByCellMembersObj) {
+    let potentialDriversArr = this.getPotentialDrivers(groupByCellMembersObj);
     return shuffle(potentialDriversArr).slice(0, this.TEAM_NUM);
   }
 }
