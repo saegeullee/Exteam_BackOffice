@@ -1,14 +1,18 @@
-const { getSlackAuth, getAdminId } = require("services/slackAuth");
+const { getSlackAuth, getAdminId } = require('services/slackAuth');
 
-exports.slackAuth = async (req, res) => {
+exports.slackAuth = async (req, res, next) => {
   try {
     const access_token = await getSlackAuth(req);
 
-    access_token
-      ? res.status(200).json({ message: "success", access_token })
-      : res.status(401).json({ error: "Auth Failed" });
+    if (access_token) {
+      res.status(200).json({ message: 'success', access_token });
+    } else {
+      const err = new Error('Auth Failed');
+      err.statusCode = 401;
+      next(err);
+    }
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 };
 
@@ -20,6 +24,8 @@ exports.checkAuth = async (req, res, next) => {
 
     next();
   } catch (err) {
-    res.status(401).json({ error: "Auth Failed" });
+    err.message = 'Auth Failed';
+    err.statusCode = 401;
+    next(err);
   }
 };

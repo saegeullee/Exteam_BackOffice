@@ -2,61 +2,72 @@ const {
   getCellList,
   makeNewCell,
   updateCell,
-  deleteCell
-} = require("services/cell");
+  deleteCell,
+} = require('services/cell');
 
-exports.cellList = async (req, res) => {
+exports.cellList = async (req, res, next) => {
   try {
     const cells = await getCellList();
 
     res.status(200).json(cells);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 };
 
-exports.addCell = async (req, res) => {
+exports.addCell = async (req, res, next) => {
   try {
     const { name } = req.body;
 
     const newCell = await makeNewCell(name);
 
-    newCell
-      ? res.status(200).json({ message: "success", newCell })
-      : res.status(400).json({ error: "Check cell name" });
+    if (newCell) {
+      res.status(200).json({ message: 'success', newCell });
+    } else {
+      const err = new Error('Check cell name');
+      err.statusCode = 400;
+      next(err);
+    }
   } catch (err) {
-    res.status(409).json({ message: "Cell already exists" });
+    err.message = 'Cell already exists';
+    err.statusCode = 409;
+    next(err);
   }
 };
 
-exports.updateCell = async (req, res) => {
+exports.updateCell = async (req, res, next) => {
   try {
     const cellId = req.params.cellId;
     const name = req.body.name;
 
     const updated = await updateCell(cellId, name);
 
-    !updated
-      ? res.status(400).json({ error: "Wrong cell name" })
-      : res.status(200).json({ message: "success", updated });
+    if (updated) {
+      res.status(200).json({ message: 'success', updated });
+    } else {
+      const err = new Error('Wrong cell name');
+      err.statusCode = 400;
+      next(err);
+    }
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 };
 
-exports.deleteCell = async (req, res) => {
+exports.deleteCell = async (req, res, next) => {
   try {
     const cellId = req.params.cellId;
 
     const deleted = await deleteCell(cellId);
 
-    !deleted
-      ? res.status(400).json({ error: "Cell does not exist" })
-      : res.status(200).json({
-          message: "success",
-          deleted
-        });
+    if (deleted) {
+      res.status(200).json({ message: 'success', deleted });
+    } else {
+      const err = new Error('Cell does not exist');
+      err.statusCode = 400;
+      next(err);
+    }
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 };
