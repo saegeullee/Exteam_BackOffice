@@ -1,32 +1,35 @@
 const Model = require('models/itemModel');
 const ItemType = require('models/itemType');
-const makeError = require('utils/makeError');
+const { responseForItemTypes } = require('utils/response');
+const { checkItemModel } = require('utils/checkModels');
+
+exports.getList = async () => {
+  const itemTypes = await ItemType.find().populate('models');
+
+  return responseForItemTypes(itemTypes);
+};
 
 exports.create = async (itemType, itemModel) => {
-  const doesModelExist = await Model.findOne({ name: itemModel });
+  const checkModelName = await checkItemModel(itemModel);
 
-  if (doesModelExist) {
-    next(makeError('Model Exists', 409));
-  } else {
+  if (checkModelName) {
     const model = await new Model({
       name: itemModel
     }).save();
-
-    const modelId = model._id;
 
     const existingItemType = await ItemType.findOne({
       name: itemType
     });
 
     if (existingItemType) {
-      existingItemType.models.push(modelId);
-      existingItemType.save();
+      existingItemType.models.push(model._id);
+      await existingItemType.save();
 
       return existingItemType;
     } else {
       const newItemType = await new ItemType({
         name: itemType,
-        models: modelId
+        models: model._id
       }).save();
 
       return newItemType;

@@ -1,5 +1,20 @@
-const { create } = require('services/itemType');
+const { create, getList } = require('services/itemType');
+const { checkItemModel } = require('utils/checkModels');
 const makeError = require('utils/makeError');
+
+exports.getItemTypeList = async (req, res, next) => {
+  try {
+    const itemTypes = await getList();
+
+    if (itemTypes.length > 0) {
+      res.status(200).json({ status: 'success', itemTypes });
+    } else {
+      next(makeError('No ItemTypes in DB', 404));
+    }
+  } catch (err) {
+    next(err);
+  }
+};
 
 exports.addItemType = async (req, res, next) => {
   try {
@@ -8,9 +23,15 @@ exports.addItemType = async (req, res, next) => {
     if (!itemType || !itemModel) {
       next(makeError('Check Request Body', 400));
     } else {
-      const created = create(itemType, itemModel);
+      const checkModel = await checkItemModel(itemModel);
 
-      res.status(200).json({ status: 'success', created });
+      if (!checkModel) {
+        next(makeError('Model Name Exists', 409));
+      } else {
+        const created = await create(itemType, itemModel);
+
+        res.status(200).json({ status: 'success', created });
+      }
     }
   } catch (err) {
     next(err);
