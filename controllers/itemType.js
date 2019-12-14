@@ -1,4 +1,11 @@
-const { create, getList, update } = require('services/itemType');
+const {
+  create,
+  getList,
+  update,
+  remove,
+  getItemType,
+  getItemModel
+} = require('services/itemType');
 const { checkItemModel } = require('utils/checkModels');
 const makeError = require('utils/makeError');
 
@@ -27,7 +34,7 @@ exports.addItemType = async (req, res, next) => {
         next(makeError('Model Name Exists', 409));
       } else {
         const created = await create(itemType, itemModel);
-
+        console.log(created);
         res.status(200).json({ status: 'success', created });
       }
     }
@@ -47,7 +54,26 @@ exports.updateItemType = async (req, res, next) => {
 
     updated === 'CHECK MODEL'
       ? next(makeError('Model Name Exists', 409))
-      : res.status(200).json(updated);
+      : res.status(200).json({ status: 'success', updated });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.deleteItemType = async (req, res, next) => {
+  try {
+    const itemTypeId = req.params.itemTypeId;
+    const itemModelId = req.query.modelId;
+
+    const deleted = itemModelId
+      ? await getItemModel(itemModelId)
+      : await getItemType(itemTypeId);
+
+    const isDeletionSuccess = await remove(itemTypeId, itemModelId);
+
+    isDeletionSuccess.deletedCount === 1
+      ? res.status(200).json({ status: 'success', deleted })
+      : next(makeError('Check ItemTypeId or ModelId', 400));
   } catch (err) {
     next(err);
   }

@@ -4,9 +4,27 @@ const { responseForItemTypes } = require('utils/response');
 const { checkItemModel } = require('utils/checkModels');
 
 exports.getList = async () => {
-  const itemTypes = await ItemType.find().populate('models');
+  const itemTypes = await ItemType.find()
+    .sort('name')
+    .select('_id models name')
+    .populate('models');
 
   return responseForItemTypes(itemTypes);
+};
+
+exports.getItemType = itemTypeId => {
+  const itemType = ItemType.findOne(
+    { _id: itemTypeId },
+    '_id models name'
+  ).populate('models', 'name');
+
+  return itemType;
+};
+
+exports.getItemModel = async itemModelId => {
+  const itemModel = await Model.findOne({ _id: itemModelId });
+
+  return itemModel;
 };
 
 exports.create = async (itemType, itemModel) => {
@@ -24,16 +42,19 @@ exports.create = async (itemType, itemModel) => {
     if (existingItemType) {
       existingItemType.models.push(model._id);
       await existingItemType.save();
-
-      return existingItemType;
     } else {
-      const newItemType = await new ItemType({
+      await new ItemType({
         name: itemType,
         models: model._id
       }).save();
-
-      return newItemType;
     }
+
+    const item = await ItemType.findOne({ name: itemType }).populate(
+      'models',
+      'name'
+    );
+
+    return item;
   }
 };
 
@@ -59,10 +80,18 @@ exports.update = async (itemTypeId, itemModelId, itemType, itemModel) => {
       { omitUndefined: true }
     ));
 
-  const updated = await ItemType.where({ _id: itemTypeId }).populate(
-    'models',
-    'name'
-  );
+  const updated = ItemType.findOne(
+    { _id: itemTypeId },
+    '_id models name'
+  ).populate('models', 'name');
 
   return updated;
+};
+
+exports.remove = (itemTypeId, itemModelId) => {
+  if (itemModelId) {
+    return Model.deleteOne({ _id: itemModelId });
+  } else {
+    return ItemType.deleteOne({ _id: itemTypeId });
+  }
 };
