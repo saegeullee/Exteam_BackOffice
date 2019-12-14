@@ -4,9 +4,21 @@ const { responseForItemTypes } = require('utils/response');
 const { checkItemModel } = require('utils/checkModels');
 
 exports.getList = async () => {
-  const itemTypes = await ItemType.find().populate('models');
+  const itemTypes = await ItemType.find()
+    .sort('name')
+    .select('_id models name')
+    .populate('models');
 
   return responseForItemTypes(itemTypes);
+};
+
+exports.getItemType = itemTypeId => {
+  const itemType = ItemType.findOne(
+    { _id: itemTypeId },
+    '_id models name'
+  ).populate('models', 'name');
+
+  return itemType;
 };
 
 exports.create = async (itemType, itemModel) => {
@@ -59,10 +71,14 @@ exports.update = async (itemTypeId, itemModelId, itemType, itemModel) => {
       { omitUndefined: true }
     ));
 
-  const updated = await ItemType.where({ _id: itemTypeId }).populate(
-    'models',
-    'name'
-  );
+  const updated = ItemType.findOne(
+    { _id: itemTypeId },
+    '_id models name'
+  ).populate('models', 'name');
 
   return updated;
+};
+
+exports.remove = itemTypeId => {
+  return ItemType.deleteOne({ _id: itemTypeId });
 };
