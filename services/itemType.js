@@ -36,3 +36,33 @@ exports.create = async (itemType, itemModel) => {
     }
   }
 };
+
+exports.update = async (itemTypeId, itemModelId, itemType, itemModel) => {
+  const modelCheck = await checkItemModel(itemModel);
+
+  if (!modelCheck) {
+    return 'CHECK MODEL';
+  }
+
+  itemModelId &&
+    itemModel.length > 0 &&
+    (await Model.updateOne(
+      { _id: itemModelId },
+      { name: itemModel },
+      { omitUndefined: true }
+    ));
+
+  itemType.length > 0 &&
+    (await ItemType.updateOne(
+      { _id: itemTypeId },
+      { name: itemType },
+      { omitUndefined: true }
+    ));
+
+  const updated = await ItemType.where({ _id: itemTypeId }).populate(
+    'models',
+    'name'
+  );
+
+  return updated;
+};

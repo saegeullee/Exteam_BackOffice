@@ -1,4 +1,4 @@
-const { create, getList } = require('services/itemType');
+const { create, getList, update } = require('services/itemType');
 const { checkItemModel } = require('utils/checkModels');
 const makeError = require('utils/makeError');
 
@@ -6,11 +6,9 @@ exports.getItemTypeList = async (req, res, next) => {
   try {
     const itemTypes = await getList();
 
-    if (itemTypes.length > 0) {
-      res.status(200).json({ status: 'success', itemTypes });
-    } else {
-      next(makeError('No ItemTypes in DB', 404));
-    }
+    itemTypes.length > 0
+      ? res.status(200).json({ status: 'success', itemTypes })
+      : next(makeError('No ItemTypes in DB', 404));
   } catch (err) {
     next(err);
   }
@@ -33,6 +31,23 @@ exports.addItemType = async (req, res, next) => {
         res.status(200).json({ status: 'success', created });
       }
     }
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.updateItemType = async (req, res, next) => {
+  try {
+    const itemTypeId = req.params.itemTypeId;
+    const itemModelId = req.query.modelId;
+
+    const { itemType, itemModel } = req.body;
+
+    const updated = await update(itemTypeId, itemModelId, itemType, itemModel);
+
+    updated === 'CHECK MODEL'
+      ? next(makeError('Model Name Exists', 409))
+      : res.status(200).json(updated);
   } catch (err) {
     next(err);
   }
