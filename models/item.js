@@ -1,8 +1,10 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
+const uniqueNumberFormatter = require('utils/uniqueNumberFormatter');
 
 const itemSchema = new Schema(
   {
+    provisionHistory: [{ type: Schema.Types.ObjectId, ref: 'Provision' }],
     owner: { type: Schema.Types.ObjectId, ref: 'Member', default: null },
     itemType: { type: Schema.Types.ObjectId, ref: 'ItemType', required: true },
     model: { type: Schema.Types.ObjectId, ref: 'ItemModel', required: true },
@@ -11,7 +13,6 @@ const itemSchema = new Schema(
     price: { type: Number, required: true },
     tags: [{ type: String }],
     isArchived: { type: Boolean, default: false },
-    provisionHistories: [{ type: Schema.Types.ObjectId, ref: 'Provision' }],
     memo: { type: String },
     usageType: {
       type: String,
@@ -27,9 +28,8 @@ const itemSchema = new Schema(
   }
 );
 
-itemSchema.virtual('uniqueNumberForClient').get(function() {
-  const numberStr = '' + this.uniqueNumber;
-  return ('00000' + numberStr).substring(numberStr.length);
+itemSchema.virtual('uniqueNumberForCilent').get(function() {
+  return uniqueNumberFormatter.getFormattedUniqueNumber(this.uniqueNumber);
 });
 
 module.exports = mongoose.model('Item', itemSchema);

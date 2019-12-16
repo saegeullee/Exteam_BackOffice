@@ -5,8 +5,10 @@ const itemController = require('controllers/item');
 router.get('/', itemController.getAllItems);
 router.post('/', itemController.createItem);
 
+router.get('/uniquenumber', itemController.getUniqueNumberForNewItem);
+
 router.get('/:id', itemController.getItem);
 router.delete('/:id', itemController.deleteItem);
-router.patch('/:id', itemController.updateItem);
+router.post('/:id', itemController.updateItem);
 
 module.exports = router;
