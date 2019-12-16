@@ -3,7 +3,8 @@ const {
   getList,
   update,
   remove,
-  getItemType
+  getItemType,
+  getItemModel
 } = require('services/itemType');
 const { checkItemModel } = require('utils/checkModels');
 const makeError = require('utils/makeError');
@@ -33,7 +34,7 @@ exports.addItemType = async (req, res, next) => {
         next(makeError('Model Name Exists', 409));
       } else {
         const created = await create(itemType, itemModel);
-
+        console.log(created);
         res.status(200).json({ status: 'success', created });
       }
     }
@@ -62,13 +63,17 @@ exports.updateItemType = async (req, res, next) => {
 exports.deleteItemType = async (req, res, next) => {
   try {
     const itemTypeId = req.params.itemTypeId;
+    const itemModelId = req.query.modelId;
 
-    const deleted = await getItemType(itemTypeId);
-    const isDeletionSuccess = await remove(itemTypeId);
+    const deleted = itemModelId
+      ? await getItemModel(itemModelId)
+      : await getItemType(itemTypeId);
+
+    const isDeletionSuccess = await remove(itemTypeId, itemModelId);
 
     isDeletionSuccess.deletedCount === 1
       ? res.status(200).json({ status: 'success', deleted })
-      : next(makeError('Check ItemTypeId', 400));
+      : next(makeError('Check ItemTypeId or ModelId', 400));
   } catch (err) {
     next(err);
   }

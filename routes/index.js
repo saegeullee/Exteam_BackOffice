@@ -5,6 +5,7 @@ const slackAuthRouter = require('./slackAuth');
 const adminRouter = require('./admin');
 const accessRouter = require('./access');
 const itemTypeRouter = require('./itemType');
+const csvRouter = require('./csv');
 
 const { checkAuth } = require('controllers/slackAuth');
 
@@ -17,6 +18,7 @@ const router = app => {
   app.use('/groupmeal', groupMealRouter);
   app.use('/admin', adminRouter);
   app.use('/itemType', itemTypeRouter);
+  app.use('/csv', csvRouter);
 
   app.all('*', (req, res, next) => {
     const err = new Error(`can't find ${req.originalUrl} on this server`);
