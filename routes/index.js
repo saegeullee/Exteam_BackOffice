@@ -7,6 +7,7 @@ const accessRouter = require('./access');
 
 const itemRouter = require('./item');
 const itemTypeRouter = require('./itemType');
+const csvRouter = require('./csv');
 
 const { checkAuth } = require('controllers/slackAuth');
 
@@ -19,6 +20,7 @@ const router = app => {
   app.use('/groupmeal', groupMealRouter);
   app.use('/admin', adminRouter);
   app.use('/itemType', itemTypeRouter);
+  app.use('/csv', csvRouter);
 
   app.use('/item', itemRouter);
 
