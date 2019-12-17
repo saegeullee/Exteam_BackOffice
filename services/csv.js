@@ -5,6 +5,8 @@ const ItemType = require('models/itemType');
 const ItemModel = require('models/itemModel');
 const Provision = require('models/provision');
 const { checkItemModel } = require('utils/checkModels');
+const { responseForItemListForCsv } = require('utils/response');
+const { convertStringToDate } = require('utils/convertDate');
 
 function splitTags(tags) {
   if (tags.includes(',')) {
@@ -17,14 +19,26 @@ function splitTags(tags) {
   }
 }
 
+const getItemListForCsv = async () => {
+  const list = await Item.find()
+    .populate('itemType', 'name')
+    .populate('provisionHistories')
+    .populate('model', 'name')
+    .populate('owner', 'nickName cell');
+
+  const result = responseForItemListForCsv(list);
+
+  return result;
+};
+
 const provide = async (member, parentItem, usageType, providedAt) => {
   const item = await Item.findOne({ _id: parentItem._id });
 
-  const date = Date(providedAt);
+  const date = convertStringToDate(providedAt);
 
   const provision = await new Provision({
     memberId: member._id,
-    givenDate: new Date(date) || null,
+    givenDate: date || null,
     usageType: usageType
   }).save();
 
@@ -137,5 +151,6 @@ module.exports = {
   getItemType,
   getItemModel,
   getItem,
-  provide
+  provide,
+  getItemListForCsv
 };

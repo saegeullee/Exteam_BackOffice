@@ -7,7 +7,6 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const router = require('routes');
 const crawler = require('crawler');
-const upload = require('express-fileupload');
 dotenv.config();
 
 app.use(cors());
@@ -15,13 +14,14 @@ app.options('*', cors());
 app.use(morgan('dev'));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
-app.use(upload());
 router(app);
 
 mongoose
   .connect(process.env.MONGO_URI, {
     useNewUrlParser: true,
-    useUnifiedTopology: true
+    useUnifiedTopology: true,
+    useFindAndModify: false,
+    useCreateIndex: true
   })
   .then(() => {
     console.log('DB Connected to ' + process.env.MONGO_URI);
