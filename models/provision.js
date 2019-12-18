@@ -7,9 +7,8 @@ const provisionSchema = new Schema({
   returnDate: { type: Date },
   usageType: {
     type: String,
-    default: '재고',
     enum: {
-      values: ['대여', '지급', '재고']
+      values: ['대여', '지급']
     }
   }
 });

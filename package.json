@@ -17,11 +17,8 @@
     "body-parser": "^1.19.0",
     "cors": "^2.8.5",
     "csv-parser": "^2.3.2",
-<<<<<<< HEAD
-=======
     "csv-stringify": "^5.3.4",
     "csvtojson": "^2.0.10",
->>>>>>> 4647486... wip
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "express-fileupload": "^1.1.6",
