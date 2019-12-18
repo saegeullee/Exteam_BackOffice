@@ -9,7 +9,7 @@ exports.checkAccess = async req => {
   }
 
   const access = Array.from(await Access.find())[0];
-  console.log(access, access.key);
+
   if (access_key === access.key) {
     return jwt.sign({ _id: access._id }, process.env.JWT_SECRET);
   } else {
@@ -20,8 +20,8 @@ exports.checkAccess = async req => {
 exports.makeAccess = async req => {
   const { new_access_key: key } = req.body;
 
-  const newAccess = await new Access({
-    key,
+  await new Access({
+    key
   }).save();
 
   return 'SUCCESS';

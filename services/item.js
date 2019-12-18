@@ -107,7 +107,10 @@ exports.getAllItems = async req => {
           queryCondition = { isArchived: false, usageType: '재고' };
           query = Item.find(queryCondition);
         } else {
-          queryCondition = { isArchived: false, usageType: { $in: ['지급', '대여'] } };
+          queryCondition = {
+            isArchived: false,
+            usageType: { $in: ['지급', '대여'] }
+          };
           query = Item.find(queryCondition);
         }
       } else {
