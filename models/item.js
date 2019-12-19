@@ -29,6 +29,10 @@ const itemSchema = new Schema(
   }
 );
 
+itemSchema.virtual('itemCount').get(function() {
+  return;
+});
+
 itemSchema.virtual('uniqueNumberForCilent').get(function() {
   return uniqueNumberFormatter.getFormattedUniqueNumber(this.uniqueNumber);
 });
