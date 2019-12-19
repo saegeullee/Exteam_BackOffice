@@ -92,25 +92,31 @@ exports.getItem = async req => {
 
 exports.getAllItems = async req => {
   let query = '';
+  let requestedItemTotalNum = 0;
+  let queryCondition = {};
+
   if (req.query.isArchived) {
     const isArchived = req.query.isArchived;
     if (isArchived === 'true') {
       //폐기한 모든 아이템  GET
-      query = Item.find({ isArchived: true });
+      queryCondition = { isArchived: true };
+      query = Item.find(queryCondition);
     } else {
       if (req.query.usageType) {
         if (decodeURI(req.query.usageType).split('"')[1] === '재고') {
-          query = Item.find({ isArchived: false, usageType: '재고' });
+          queryCondition = { isArchived: false, usageType: '재고' };
+          query = Item.find(queryCondition);
         } else {
-          query = Item.find({
-            isArchived: false,
-            usageType: { $in: ['지급', '대여'] }
-          });
+          queryCondition = { isArchived: false, usageType: { $in: ['지급', '대여'] } };
+          query = Item.find(queryCondition);
         }
       } else {
-        query = Item.find({ isArchived: false });
+        queryCondition = { isArchived: false };
+        query = Item.find(queryCondition);
       }
     }
+
+    requestedItemTotalNum = await Item.countDocuments(queryCondition);
   } else {
     return 'ISARCHIVED_NOT_DEFINED';
   }
@@ -143,7 +149,7 @@ exports.getAllItems = async req => {
     return 'FAILED_GET_ALL_ITEMS';
   }
 
-  return items;
+  return { items, itemTotalNum: requestedItemTotalNum };
 };
 
 // 새로운 아이템을 만드는 페이지에서 요청하는 서비스
