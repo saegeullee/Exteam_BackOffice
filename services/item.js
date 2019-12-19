@@ -72,7 +72,7 @@ exports.getItem = async req => {
     .populate({ path: 'model', select: 'name' })
     .populate({ path: 'owner', select: 'nickName' })
     .populate({
-      path: 'provisionHistory',
+      path: 'provisionHistories',
       populate: {
         path: 'memberId',
         select: 'nickName cell',
@@ -126,7 +126,7 @@ exports.getAllItems = async req => {
     const sortBy = req.query.sort.split(',').join(' ');
     query = query.sort(sortBy);
   } else {
-    query = query.sort('acquiredDate');
+    query = query.sort('-acquiredDate');
   }
 
   //페이징
@@ -162,7 +162,8 @@ exports.getItemInfoForNewItem = async () => {
   itemTypeInfo = itemTypeInfo.map(el => {
     for (let i = 0; i < uniqueNumberForEachItemTypeArr.length; i++) {
       if (el.itemType === uniqueNumberForEachItemTypeArr[i].name) {
-        el.uniqueNumberForClient = uniqueNumberForEachItemTypeArr[i].uniqueNumberForClient;
+        el.uniqueNumberForClient =
+          uniqueNumberForEachItemTypeArr[i].uniqueNumberForClient;
         el.uniqueNumber = uniqueNumberForEachItemTypeArr[i].uniqueNumber;
       }
     }

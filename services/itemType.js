@@ -12,8 +12,8 @@ exports.getList = async () => {
   return responseForItemTypes(itemTypes);
 };
 
-exports.getItemType = itemTypeId => {
-  const itemType = ItemType.findOne(
+exports.getItemType = async itemTypeId => {
+  const itemType = await ItemType.findOne(
     { _id: itemTypeId },
     '_id models name'
   ).populate('models', 'name');

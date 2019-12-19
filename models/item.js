@@ -4,7 +4,7 @@ const uniqueNumberFormatter = require('utils/uniqueNumberFormatter');
 
 const itemSchema = new Schema(
   {
-    provisionHistory: [{ type: Schema.Types.ObjectId, ref: 'Provision' }],
+    provisionHistories: [{ type: Schema.Types.ObjectId, ref: 'Provision' }],
     owner: { type: Schema.Types.ObjectId, ref: 'Member', default: null },
     itemType: { type: Schema.Types.ObjectId, ref: 'ItemType', required: true },
     model: { type: Schema.Types.ObjectId, ref: 'ItemModel', required: true },
@@ -29,11 +29,7 @@ const itemSchema = new Schema(
   }
 );
 
-itemSchema.virtual('itemCount').get(function() {
-  return;
-});
-
-itemSchema.virtual('uniqueNumberForCilent').get(function() {
+itemSchema.virtual('uniqueNumberForClient').get(function() {
   return uniqueNumberFormatter.getFormattedUniqueNumber(this.uniqueNumber);
 });
 
