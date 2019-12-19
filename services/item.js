@@ -133,7 +133,11 @@ exports.getAllItems = async req => {
   const items = await query
     .populate({ path: 'itemType', select: 'name' })
     .populate({ path: 'model', select: 'name' })
-    .populate({ path: 'owner', select: 'nickName' });
+    .populate({
+      path: 'owner',
+      select: 'nickName cell',
+      populate: { path: 'cell', select: 'name' }
+    });
 
   if (!items) {
     return 'FAILED_GET_ALL_ITEMS';
