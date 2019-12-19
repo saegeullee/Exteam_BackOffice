@@ -3,6 +3,26 @@ const Member = require('models/member');
 const Provision = require('models/provision');
 const { convertStringToDate } = require('utils/convertDate');
 
+exports.getItemProvisionData = async itemId => {
+  const item = await Item.findById(itemId).populate('owner provisionHistories');
+
+  const { owner, provisionHistories } = item;
+
+  const provision = provisionHistories.map(provision => {
+    if (provision.returnDate === undefined) {
+      return provision;
+    }
+  })[item.provisionHistories.length - 1];
+
+  const response = {
+    _id: itemId,
+    owner: owner.nickName,
+    givenDate: provision.givenDate
+  };
+
+  return response;
+};
+
 exports.returnItem = async (itemId, returnDate) => {
   const item = await Item.findById(itemId)
     .populate('itemType', 'name')
@@ -30,17 +50,15 @@ exports.returnItem = async (itemId, returnDate) => {
     await item.save();
 
     return {
-      returned: {
-        item: {
-          _id: item._id,
-          uniqueNumber: item.itemType.name + '_' + item.uniqueNumberForClient
-        },
-        provision: {
-          _id: provision._id,
-          usageType: provision.usageType,
-          givenDate: provision.givenDate,
-          returnDate: provision.returnDate
-        }
+      item: {
+        _id: item._id,
+        uniqueNumber: item.itemType.name + '_' + item.uniqueNumberForClient
+      },
+      provision: {
+        _id: provision._id,
+        usageType: provision.usageType,
+        givenDate: provision.givenDate,
+        returnDate: provision.returnDate
       }
     };
   }
@@ -52,6 +70,10 @@ exports.provideItem = async (itemId, memberName, givenAt, usageType) => {
     .populate('provisionHistories');
   const member = await Member.findOne({ nickName: memberName });
   const givenDate = convertStringToDate(givenAt);
+
+  if (!member) {
+    return '!MEMBER';
+  }
 
   if (item.usageType !== '재고') {
     return null;
