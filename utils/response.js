@@ -1,23 +1,18 @@
+const Cell = require('models/cell');
 const { convertDateToString } = require('utils/convertDate');
 
 exports.responseForItemTypes = itemTypes => {
-  const response = itemTypes.map(_itemType => {
-    const { _id, models, name: itemType } = _itemType;
-
-    const itemModels = models.map(model => {
-      const { _id, name } = model;
-
+  return itemTypes.map(({ _id, models, name: itemType }) => {
+    const itemModels = models.map(({ _id, name }) => {
       return { _id, name };
     });
 
     return { _id, itemModels, itemType };
   });
-
-  return response;
 };
 
 exports.responseForItemListForCsv = items => {
-  Promise.all(
+  return Promise.all(
     items.map(
       async ({
         owner,

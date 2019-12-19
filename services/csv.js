@@ -1,16 +1,16 @@
-const Member = require('models/member');
-const Cell = require('models/cell');
-const Item = require('models/item');
-const ItemType = require('models/itemType');
-const ItemModel = require('models/itemModel');
-const Provision = require('models/provision');
-const { checkItemModel } = require('utils/checkModels');
-const { responseForItemListForCsv } = require('utils/response');
-const { convertStringToDate } = require('utils/convertDate');
+const Member = require("models/member");
+const Cell = require("models/cell");
+const Item = require("models/item");
+const ItemType = require("models/itemType");
+const ItemModel = require("models/itemModel");
+const Provision = require("models/provision");
+const { checkItemModel } = require("utils/checkModels");
+const { responseForItemListForCsv } = require("utils/response");
+const { convertStringToDate } = require("utils/convertDate");
 
 function splitTags(tags) {
-  if (tags.includes(',')) {
-    const splitTags = tags.split(',');
+  if (tags.includes(",")) {
+    const splitTags = tags.split(",");
     const result = splitTags.map(tag => tag.trim());
 
     return result;
@@ -19,19 +19,17 @@ function splitTags(tags) {
   }
 }
 
-const getItemListForCsv = async () => {
+const makeItemListForCsv = async () => {
   const list = await Item.find()
-    .populate('itemType', 'name')
-    .populate('provisionHistories')
-    .populate('model', 'name')
-    .populate('owner', 'nickName cell');
+    .populate("itemType", "name")
+    .populate("provisionHistories")
+    .populate("model", "name")
+    .populate("owner", "nickName cell");
 
-  const result = responseForItemListForCsv(list);
-
-  return result;
+  return responseForItemListForCsv(list);
 };
 
-const provide = async (member, parentItem, usageType, providedAt) => {
+const provideForDB = async (member, parentItem, usageType, providedAt) => {
   const item = await Item.findOne({ _id: parentItem._id });
 
   const date = convertStringToDate(providedAt);
@@ -50,9 +48,9 @@ const provide = async (member, parentItem, usageType, providedAt) => {
   return provision;
 };
 
-const getItem = async (itemType, price, tags, memo, model, owner) => {
+const makeItemForDB = async (itemType, price, tags, memo, model, owner) => {
   const itemList = await Item.find({ itemType: itemType._id }).sort(
-    'uniqueNumber'
+    "uniqueNumber"
   );
 
   const uniqueNumber =
@@ -68,89 +66,80 @@ const getItem = async (itemType, price, tags, memo, model, owner) => {
     owner
   }).save();
 
-  const result = await Item.findOne({ _id: item._id }).populate('itemType');
+  const result = await Item.findOne({ _id: item._id }).populate("itemType");
 
-  const number = String(result.uniqueNumber);
+  const number = result.uniqueNumber.toString();
   const DIGITS_COUNT = 5;
-  let zeros = '0';
+  let zeros = "0";
 
   for (let i = DIGITS_COUNT - number.length; i > 1; i--) {
-    zeros = zeros + '0';
+    zeros = zeros + "0";
   }
 
-  const id = result.itemType.name + '_' + zeros + number;
+  const id = result.itemType.name + "_" + zeros + number;
 
-  console.log('고유번호 : ', id);
+  console.log(id);
   return result;
 };
 
-const getItemModel = async modelName => {
+const makeItemModelForDB = async modelName => {
   const checkModel = await checkItemModel(modelName);
 
   let model;
 
   if (checkModel) {
-    model = await new ItemModel({
+    model = new ItemModel({
       name: modelName
     }).save();
   } else {
-    model = await ItemModel.findOne({ name: modelName });
+    model = ItemModel.findOne({ name: modelName });
   }
 
   return model;
 };
 
-const getItemType = async (type, model) => {
+const makeItemTypeForDB = async (type, model) => {
   const itemType = await ItemType.findOne({ name: type });
 
   if (itemType) {
     !itemType.models.includes(model._id) && itemType.models.push(model._id);
-    await itemType.save();
+    itemType.save();
   } else {
-    await new ItemType({
+    new ItemType({
       name: type,
       models: model._id
     }).save();
   }
 
-  const result = await ItemType.findOne({ name: type }).populate('models');
-
-  return result;
+  return await ItemType.findOne({ name: type }).populate("models");
 };
 
-const getCell = async cellName => {
+const makeCellForDB = async cellName => {
   const cell =
     (await Cell.findOne({ name: cellName })) ||
-    (
-      await new Cell({
-        name: cellName
-      })
-    ).save();
+    (await new Cell({
+      name: cellName
+    }).save());
 
   return cell;
 };
 
-const getMember = async (memberName, cell) => {
+const makeMemberForDB = async (memberName, cell) => {
   (await Member.findOne({ nickName: memberName })) ||
     (await new Member({
       nickName: memberName,
       cell: cell._id
     }).save());
 
-  const member = Member.findOne({ nickName: memberName }).populate(
-    'cell',
-    'name'
-  );
-
-  return member;
+  return Member.findOne({ nickName: memberName }).populate("cell", "name");
 };
 
 module.exports = {
-  getMember,
-  getCell,
-  getItemType,
-  getItemModel,
-  getItem,
-  provide,
-  getItemListForCsv
+  makeMemberForDB,
+  makeCellForDB,
+  makeItemTypeForDB,
+  makeItemModelForDB,
+  makeItemForDB,
+  provideForDB,
+  makeItemListForCsv
 };

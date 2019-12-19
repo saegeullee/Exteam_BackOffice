@@ -5,8 +5,11 @@ const { convertStringToDate } = require('utils/convertDate');
 
 exports.getItemProvisionData = async itemId => {
   const item = await Item.findById(itemId).populate('owner provisionHistories');
-
   const { owner, provisionHistories } = item;
+
+  if (provisionHistories.length === 0) {
+    return '!HISTORY';
+  }
 
   const provision = provisionHistories.map(provision => {
     if (provision.returnDate === undefined) {
@@ -14,13 +17,11 @@ exports.getItemProvisionData = async itemId => {
     }
   })[item.provisionHistories.length - 1];
 
-  const response = {
+  return {
     _id: itemId,
     owner: owner.nickName,
     givenDate: provision.givenDate
   };
-
-  return response;
 };
 
 exports.returnItem = async (itemId, returnDate) => {

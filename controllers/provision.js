@@ -11,7 +11,9 @@ exports.getProvisionData = async (req, res, next) => {
 
     const data = await getItemProvisionData(itemId);
 
-    res.status(200).json({ status: 'success', data });
+    data === '!HISTORY'
+      ? next(makeError('No history', 400))
+      : res.status(200).json({ status: 'success', data });
   } catch (err) {
     console.log(err);
     next(err);
