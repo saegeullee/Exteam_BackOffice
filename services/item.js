@@ -1,3 +1,4 @@
+const itemTypeService = require('services/itemType');
 const Item = require('models/item');
 const ItemType = require('models/itemType');
 const ItemModel = require('models/itemModel');
@@ -20,7 +21,7 @@ exports.createItem = async req => {
     model: item.model._id,
     uniqueNumber: item.uniqueNumber,
     price: item.price,
-    tag: item.tag,
+    tags: item.tags,
     memo: item.memo
   });
 
@@ -43,7 +44,11 @@ exports.updateItem = async req => {
     return 'NO_ITEM';
   }
 
-  const updatedItem = await Item.findByIdAndUpdate(req.params.id, { ...item }, { new: true });
+  const updatedItem = await Item.findByIdAndUpdate(
+    req.params.id,
+    { ...item },
+    { new: true, runValidators: true }
+  );
 
   if (!updatedItem) {
     return 'FAILED_UPDATE_ITEM';
@@ -87,12 +92,33 @@ exports.getItem = async req => {
 
 exports.getAllItems = async req => {
   let query = '';
-  if (!req.query.isArchived) {
-    //사용중인 모든 아이템 GET
-    query = Item.find({ isArchived: false });
+  let requestedItemTotalNum = 0;
+  let queryCondition = {};
+
+  if (req.query.isArchived) {
+    const isArchived = req.query.isArchived;
+    if (isArchived === 'true') {
+      //폐기한 모든 아이템  GET
+      queryCondition = { isArchived: true };
+      query = Item.find(queryCondition);
+    } else {
+      if (req.query.usageType) {
+        if (decodeURI(req.query.usageType).split('"')[1] === '재고') {
+          queryCondition = { isArchived: false, usageType: '재고' };
+          query = Item.find(queryCondition);
+        } else {
+          queryCondition = { isArchived: false, usageType: { $in: ['지급', '대여'] } };
+          query = Item.find(queryCondition);
+        }
+      } else {
+        queryCondition = { isArchived: false };
+        query = Item.find(queryCondition);
+      }
+    }
+
+    requestedItemTotalNum = await Item.countDocuments(queryCondition);
   } else {
-    //폐기한 모든 아이템  GET
-    query = Item.find({ isArchived: true });
+    return 'ISARCHIVED_NOT_DEFINED';
   }
 
   //정렬
@@ -113,16 +139,40 @@ exports.getAllItems = async req => {
   const items = await query
     .populate({ path: 'itemType', select: 'name' })
     .populate({ path: 'model', select: 'name' })
-    .populate({ path: 'owner', select: 'nickName' });
+    .populate({
+      path: 'owner',
+      select: 'nickName cell',
+      populate: { path: 'cell', select: 'name' }
+    });
 
   if (!items) {
     return 'FAILED_GET_ALL_ITEMS';
   }
 
-  return items;
+  return { items, itemTotalNum: requestedItemTotalNum };
 };
 
-exports.getUniqueNumberForNewItem = async () => {
+// 새로운 아이템을 만드는 페이지에서 요청하는 서비스
+// 새로운 아이템을 만들기 위해서 필요한 아이템 비품 종류, 각 비품 종류의 모델, 해당 비품의 고유번호를 보내줌
+exports.getItemInfoForNewItem = async () => {
+  let itemTypeInfo = await itemTypeService.getList();
+
+  const uniqueNumberForEachItemTypeArr = await getUniqueNumberForNewItem();
+
+  itemTypeInfo = itemTypeInfo.map(el => {
+    for (let i = 0; i < uniqueNumberForEachItemTypeArr.length; i++) {
+      if (el.itemType === uniqueNumberForEachItemTypeArr[i].name) {
+        el.uniqueNumberForClient = uniqueNumberForEachItemTypeArr[i].uniqueNumberForClient;
+        el.uniqueNumber = uniqueNumberForEachItemTypeArr[i].uniqueNumber;
+      }
+    }
+    return el;
+  });
+
+  return itemTypeInfo;
+};
+
+const getUniqueNumberForNewItem = async () => {
   let uniqueNumberOfEachItemType = await Item.aggregate([
     {
       $group: {
@@ -139,8 +189,11 @@ exports.getUniqueNumberForNewItem = async () => {
   uniqueNumberOfEachItemType = await Promise.all(
     uniqueNumberOfEachItemType.map(async el => {
       const itemType = await ItemType.findById(el._id);
-      const uniqueNumber = uniqueNumberFormatter.getFormattedUniqueNumber(el.uniqueNumber + 1);
-      return { name: itemType.name, uniqueNumber };
+      const uniqueNumberForClient = uniqueNumberFormatter.getFormattedUniqueNumber(
+        el.uniqueNumber + 1
+      );
+      const uniqueNumber = el.uniqueNumber + 1;
+      return { name: itemType.name, uniqueNumber, uniqueNumberForClient };
     })
   );
 

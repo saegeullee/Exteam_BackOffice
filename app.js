@@ -25,11 +25,7 @@ mongoose
   })
   .then(() => {
     console.log('DB Connected to ' + process.env.MONGO_URI);
-<<<<<<< HEAD
-    //crawler();
-=======
     // crawler();
->>>>>>> fe2dafe... 아이템 CRUD 추가 구현 및 폐기한 비품 CRUD 구현
   })
   .catch(err => {
     console.log('DB Connection Error' + err.message);
