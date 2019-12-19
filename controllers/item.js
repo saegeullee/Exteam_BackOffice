@@ -111,7 +111,6 @@ exports.getAllItems = catchAsync(async (req, res, next) => {
       message: 'specify isArchived querystring to either true or false'
     });
   }
-  console.log(items);
   res.status(200).json({
     status: 'success',
     message: items
