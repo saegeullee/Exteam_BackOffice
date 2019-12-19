@@ -3,13 +3,13 @@ const makeError = require('utils/makeError');
 const stringify = require('csv-stringify');
 const csvtojson = require('csvtojson');
 const {
-  getMember,
-  getCell,
-  getItemType,
-  getItemModel,
-  getItem,
-  provide,
-  getItemListForCsv
+  makeMemberForDB,
+  makeCellForDB,
+  makeItemTypeForDB,
+  makeItemModelForDB,
+  makeItemForDB,
+  makeProvisionForDB,
+  makeItemListForCsv
 } = require('services/csv');
 
 exports.downloadCsv = async (req, res, next) => {
@@ -22,7 +22,7 @@ exports.downloadCsv = async (req, res, next) => {
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Pragma', 'no-cache');
 
-    const data = await getItemListForCsv();
+    const data = await makeItemListForCsv();
 
     data.length > 0
       ? stringify(data, { header: true }).pipe(res)
@@ -42,13 +42,13 @@ exports.uploadCsv = async (req, res, next) => {
       const tags = data['태그'];
       const usageType = data['상태'];
       const providedAt = data['취득일'];
-      const itemModel = await getItemModel(data['모델명']);
-      const itemType = await getItemType(data['비품종류'], itemModel);
+      const itemModel = await makeItemModelForDB(data['모델명']);
+      const itemType = await makeItemTypeForDB(data['비품종류'], itemModel);
 
       if (data['사용자']) {
-        const cell = await getCell(data['소속']);
-        const member = await getMember(data['사용자'], cell);
-        const item = await getItem(
+        const cell = await makeCellForDB(data['소속']);
+        const member = await makeMemberForDB(data['사용자'], cell);
+        const item = await makeItemForDB(
           itemType._id,
           price,
           tags,
@@ -56,26 +56,24 @@ exports.uploadCsv = async (req, res, next) => {
           itemModel._id,
           member._id
         );
-        const provision = await provide(member, item, usageType, providedAt);
+
+        await makeProvisionForDB(member, item, usageType, providedAt);
       } else {
-        const item = await getItem(
-          itemType._id,
-          price,
-          tags,
-          memo,
-          itemModel._id
-        );
+        await makeItemForDB(itemType._id, price, tags, memo, itemModel._id);
       }
     }
-
     // const item = await Item.find()
     //   .populate('itemType', 'name')
-    //   .populate('provisionHistories')
+    //   .populate({
+    //     path: 'provisionHistories',
+    //     populate: { path: 'memberId', select: 'nickName' }
+    //   })
     //   .populate('model', 'name')
     //   .populate('owner', 'nickName');
+    const itemCount = await Item.countDocuments();
 
     result.length > 0
-      ? res.status(200).json({ status: 'success', data: 'item' })
+      ? res.status(200).json({ status: 'success', totalItems: itemCount })
       : makeError('Something went wrong, Try again', 404);
   } catch (err) {
     console.log(err);
