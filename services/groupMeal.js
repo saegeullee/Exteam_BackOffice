@@ -1,8 +1,8 @@
-const GroupMealsGeneratingService = require("classes/groupMeal");
-const History = require("models/history");
-const Member = require("models/member");
-const Group = require("models/group");
-const CONSTANT = require("utils/constant");
+const GroupMealsGeneratingService = require('utils/groupMeal');
+const History = require('models/history');
+const Member = require('models/member');
+const Group = require('models/group');
+const CONSTANT = require('utils/constant');
 
 exports.getGroupMeals = async () => {
   const groupMeals = new GroupMealsGeneratingService();
@@ -15,10 +15,10 @@ exports.getGroupMeals = async () => {
 exports.getLastGroupMealHistory = async () => {
   let lastGroupMealHistory = await History.find()
     .populate({
-      path: "history",
-      populate: { path: "group" }
+      path: 'history',
+      populate: { path: 'group' }
     })
-    .sort("-createdAt")
+    .sort('-createdAt')
     .limit(1);
 
   return lastGroupMealHistory;
@@ -33,10 +33,10 @@ exports.getLastGroupMealHistory = async () => {
 exports.getLastGroupMealHistories = async () => {
   let lastGroupMealHistories = await History.find()
     .populate({
-      path: "history",
-      populate: { path: "group" }
+      path: 'history',
+      populate: { path: 'group' }
     })
-    .sort("-createdAt")
+    .sort('-createdAt')
     .limit(2);
 
   return lastGroupMealHistories;
@@ -47,7 +47,7 @@ exports.saveGroupMealHistory = async (req, res, next) => {
   if (req.body.groupMeals) {
     groupMeals = req.body.groupMeals;
   } else {
-    return "NO_GROUP_MEALS";
+    return 'NO_GROUP_MEALS';
   }
 
   const groupIds = [];
@@ -71,7 +71,7 @@ exports.saveGroupMealHistory = async (req, res, next) => {
 
   const history = await History.create({ history: groupIds });
   if (history) {
-    return "success";
+    return 'success';
   }
 };
 
@@ -82,7 +82,7 @@ updateDriversStateInDB = async driversIds => {
     { multi: true }
   );
   if (updatedMembersResult.ok === 1) {
-    console.log("successfully updated drivers state in db");
+    console.log('successfully updated drivers state in db');
   }
 
   identifyIfTheresEnoughDriversForNextTerm();
@@ -105,6 +105,6 @@ identifyIfTheresEnoughDriversForNextTerm = async () => {
 resetAllMembersWasDriverFieldFalse = async () => {
   const updatedMembersResult = await Member.updateMany({}, { wasDriver: false });
   if (updatedMembersResult.ok === 1) {
-    console.log("successfully updated all members wasdriver field false");
+    console.log('successfully updated all members wasdriver field false');
   }
 };
