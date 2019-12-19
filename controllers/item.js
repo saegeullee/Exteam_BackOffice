@@ -2,7 +2,22 @@ const itemService = require('services/item');
 const catchAsync = require('utils/catchAsync');
 
 exports.createItem = catchAsync(async (req, res, next) => {
-  const item = await itemService.createItem(req, res, next);
+  const item = await itemService.createItem(req);
+
+  switch (item) {
+    case 'ITEMTYPE_DOESNT_EXIST':
+      return next({ status: 'fail', statusCode: 400, message: "ItemType doesn't exist" });
+    case 'ITEMMODEL_DOESNT_EXIST':
+      return next({ status: 'fail', statusCode: 400, message: "ItemModel doesn't exist" });
+    case 'NO_ITEM':
+      return next({
+        status: 'fail',
+        statusCode: 400,
+        message: 'item object must be sent with item key'
+      });
+    case 'FAILED_CREATE_ITEM':
+      return next({ status: 'fail', statusCode: 400, message: 'create item failed' });
+  }
 
   res.status(200).json({
     status: 'success',
@@ -11,7 +26,18 @@ exports.createItem = catchAsync(async (req, res, next) => {
 });
 
 exports.updateItem = catchAsync(async (req, res, next) => {
-  const item = await itemService.updateItem(req, res, next);
+  const item = await itemService.updateItem(req);
+
+  switch (item) {
+    case 'NO_ITEM':
+      return next({
+        status: 'fail',
+        statusCode: 400,
+        message: 'item object must be sent with item key'
+      });
+    case 'FAILED_UPDATE_ITEM':
+      return next({ status: 'fail', statusCode: 400, message: 'update item failed' });
+  }
 
   res.status(200).json({
     status: 'success',
@@ -20,16 +46,24 @@ exports.updateItem = catchAsync(async (req, res, next) => {
 });
 
 exports.deleteItem = catchAsync(async (req, res, next) => {
-  await itemService.deleteItem(req, res, next);
+  const result = await itemService.deleteItem(req);
+
+  if (result === 'FAILED_DELETE_ITEM') {
+    return next({ status: 'fail', statusCode: 400, message: 'delete item failed' });
+  }
 
   res.status(200).json({
     status: 'success',
-    message: 'item deleted'
+    message: 'successfully deleted item'
   });
 });
 
 exports.getItem = catchAsync(async (req, res, next) => {
-  const item = await itemService.getItem(req, res, next);
+  const item = await itemService.getItem(req);
+
+  if (item === 'ITEM_DOESNT_EXIST') {
+    return next({ status: 'fail', statusCode: 400, message: "item doesn't exist" });
+  }
 
   res.status(200).json({
     status: 'success',
@@ -38,7 +72,11 @@ exports.getItem = catchAsync(async (req, res, next) => {
 });
 
 exports.getAllItems = catchAsync(async (req, res, next) => {
-  const items = await itemService.getAllItems(req, res, next);
+  const items = await itemService.getAllItems(req);
+
+  if (items === 'FAILED_GET_ALL_ITEMS') {
+    return next({ status: 'fail', statusCode: 400, message: 'get all items failed' });
+  }
 
   res.status(200).json({
     status: 'success',
@@ -46,18 +84,15 @@ exports.getAllItems = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.getUniqueNumberForNewItem = async (req, res, next) => {
-  try {
-    const result = await itemService.getUniqueNumberForNewItem(req, res, next);
+exports.getUniqueNumberForNewItem = catchAsync(async (req, res, next) => {
+  const result = await itemService.getUniqueNumberForNewItem();
 
-    res.status(200).json({
-      status: 'success',
-      result
-    });
-  } catch (err) {
-    res.status(404).json({
-      status: 'fail',
-      message: err
-    });
+  if (result === 'FAILED_GET_UNIQUE_NUMBER') {
+    return next({ status: 'fail', statusCode: 400, message: 'get uniqueNumbers failed' });
   }
-};
+
+  res.status(200).json({
+    status: 'success',
+    result
+  });
+});

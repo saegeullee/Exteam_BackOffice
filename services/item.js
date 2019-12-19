@@ -1,35 +1,16 @@
 const Item = require('models/item');
 const ItemType = require('models/itemType');
 const ItemModel = require('models/itemModel');
+const Provision = require('models/provision');
+const uniqueNumberFormatter = require('utils/uniqueNumberFormatter');
 
-const validateItem = async (item, next) => {
-  const { itemType, model } = item;
-
-  if (itemType) {
-    const itemTypeInDB = await ItemType.findOne({ name: itemType });
-    if (itemTypeInDB) {
-      item.itemType = itemTypeInDB;
-    } else {
-      return next({ status: 'fail', statusCode: 400, message: "ItemType doesn't exist" });
-    }
-  }
-
-  if (model) {
-    const itemModelInDB = await ItemModel.findOne({ name: model });
-    if (itemModelInDB) {
-      item.model = itemModelInDB;
-    } else {
-      return next({ status: 'fail', statusCode: 400, message: "ItemModel doesn't exist" });
-    }
-  }
-
-  return item;
-};
-
-exports.createItem = async (req, res, next) => {
+exports.createItem = async req => {
   let item = '';
   if (req.body.item) {
-    item = await validateItem(req.body.item, next);
+    item = await validateItem(req.body.item);
+    if (item.message) {
+      return item.message;
+    }
   } else {
     return 'NO_ITEM';
   }
@@ -44,16 +25,20 @@ exports.createItem = async (req, res, next) => {
   });
 
   if (!insertedItem) {
-    return next({ status: 'fail', statusCode: 400, message: 'create item failed' });
+    return 'FAILED_CREATE_ITEM';
   }
 
   return insertedItem;
 };
 
-exports.updateItem = async (req, res, next) => {
+exports.updateItem = async req => {
   let item = '';
   if (req.body.item) {
-    item = await validateItem(req.body.item, next);
+    if (req.body.item.itemType || req.body.item.model) {
+      item = await validateItem(req.body.item);
+    } else {
+      item = req.body.item;
+    }
   } else {
     return 'NO_ITEM';
   }
@@ -61,34 +46,61 @@ exports.updateItem = async (req, res, next) => {
   const updatedItem = await Item.findByIdAndUpdate(req.params.id, { ...item }, { new: true });
 
   if (!updatedItem) {
-    return next({ status: 'fail', statusCode: 400, message: 'update item failed' });
+    return 'FAILED_UPDATE_ITEM';
   }
 
   return updatedItem;
 };
 
-exports.deleteItem = async (req, res, next) => {
-  await Item.findByIdAndDelete(req.params.id);
+exports.deleteItem = async req => {
+  const result = await Item.findByIdAndDelete(req.params.id);
+
+  if (!result) {
+    return 'FAILED_DELETE_ITEM';
+  }
+  return result;
 };
 
-exports.getItem = async (req, res, next) => {
-  const item = await Item.findById(req.params.id);
+exports.getItem = async req => {
+  const item = await Item.findById(req.params.id)
+    .populate({ path: 'itemType', select: 'name' })
+    .populate({ path: 'model', select: 'name' })
+    .populate({ path: 'owner', select: 'nickName' })
+    .populate({
+      path: 'provisionHistory',
+      populate: {
+        path: 'memberId',
+        select: 'nickName cell',
+        populate: {
+          path: 'cell',
+          select: 'name'
+        }
+      }
+    });
 
   if (!item) {
-    return next({ status: 'fail', statusCode: 400, message: "item doesn't exist" });
+    return 'ITEM_DOESNT_EXIST';
   }
+
   return item;
 };
 
-exports.getAllItems = async (req, res, next) => {
-  let query = Item.find();
+exports.getAllItems = async req => {
+  let query = '';
+  if (!req.query.isArchived) {
+    //사용중인 모든 아이템 GET
+    query = Item.find({ isArchived: false });
+  } else {
+    //폐기한 모든 아이템  GET
+    query = Item.find({ isArchived: true });
+  }
 
   //정렬
   if (req.query.sort) {
-    const sortBy = req.query.sort;
+    const sortBy = req.query.sort.split(',').join(' ');
     query = query.sort(sortBy);
   } else {
-    query = query.sort('aquiredDate');
+    query = query.sort('acquiredDate');
   }
 
   //페이징
@@ -98,31 +110,58 @@ exports.getAllItems = async (req, res, next) => {
 
   query = query.skip(skip).limit(limit);
 
-  const items = await query;
+  const items = await query
+    .populate({ path: 'itemType', select: 'name' })
+    .populate({ path: 'model', select: 'name' })
+    .populate({ path: 'owner', select: 'nickName' });
 
   if (!items) {
-    return next({ status: 'fail', statusCode: 400, message: 'get all items failed' });
+    return 'FAILED_GET_ALL_ITEMS';
   }
 
   return items;
 };
 
-exports.getUniqueNumberForNewItem = async (req, res, next) => {
-  try {
-    const currentNumbers = await Item.aggregate([
-      {
-        $group: {
-          _id: '$itemType',
-          uniqueNumber: { $max: '$uniqueNumber' }
-        }
+exports.getUniqueNumberForNewItem = async () => {
+  let uniqueNumberOfEachItemType = await Item.aggregate([
+    {
+      $group: {
+        _id: '$itemType',
+        uniqueNumber: { $max: '$uniqueNumber' }
       }
-    ]);
+    }
+  ]);
 
-    return currentNumbers;
-  } catch (err) {
-    res.status(404).json({
-      status: 'fail',
-      message: err
-    });
+  if (!uniqueNumberOfEachItemType) {
+    return 'FAILED_GET_UNIQUE_NUMBER';
   }
+
+  uniqueNumberOfEachItemType = await Promise.all(
+    uniqueNumberOfEachItemType.map(async el => {
+      const itemType = await ItemType.findById(el._id);
+      const uniqueNumber = uniqueNumberFormatter.getFormattedUniqueNumber(el.uniqueNumber + 1);
+      return { name: itemType.name, uniqueNumber };
+    })
+  );
+
+  return uniqueNumberOfEachItemType;
+};
+
+const validateItem = async item => {
+  const { itemType, model } = item;
+
+  const itemTypeInDB = await ItemType.findOne({ name: itemType });
+  if (itemTypeInDB) {
+    item.itemType = itemTypeInDB;
+  } else {
+    item.message = 'ITEMTYPE_DOESNT_EXIST';
+  }
+
+  const itemModelInDB = await ItemModel.findOne({ name: model });
+  if (itemModelInDB) {
+    item.model = itemModelInDB;
+  } else {
+    item.message = 'ITEMMODEL_DOESNT_EXIST';
+  }
+  return item;
 };
