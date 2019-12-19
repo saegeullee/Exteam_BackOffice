@@ -29,7 +29,12 @@ const makeItemListForCsv = async () => {
   return responseForItemListForCsv(list);
 };
 
-const provideForDB = async (member, parentItem, usageType, providedAt) => {
+const makeProvisionForDB = async (
+  member,
+  parentItem,
+  usageType,
+  providedAt
+) => {
   const item = await Item.findOne({ _id: parentItem._id });
 
   const date = convertStringToDate(providedAt);
@@ -140,6 +145,6 @@ module.exports = {
   makeItemTypeForDB,
   makeItemModelForDB,
   makeItemForDB,
-  provideForDB,
+  makeProvisionForDB,
   makeItemListForCsv
 };

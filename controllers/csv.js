@@ -8,7 +8,7 @@ const {
   makeItemTypeForDB,
   makeItemModelForDB,
   makeItemForDB,
-  provideForDB,
+  makeProvisionForDB,
   makeItemListForCsv
 } = require("services/csv");
 
@@ -57,7 +57,7 @@ exports.uploadCsv = async (req, res, next) => {
           member._id
         );
 
-        await provideForDB(member, item, usageType, providedAt);
+        await makeProvisionForDB(member, item, usageType, providedAt);
       } else {
         await makeItemForDB(itemType._id, price, tags, memo, itemModel._id);
       }

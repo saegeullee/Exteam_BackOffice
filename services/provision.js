@@ -1,14 +1,14 @@
-const Item = require('models/item');
-const Member = require('models/member');
-const Provision = require('models/provision');
-const { convertStringToDate } = require('utils/convertDate');
+const Item = require("models/item");
+const Member = require("models/member");
+const Provision = require("models/provision");
+const { convertStringToDate } = require("utils/convertDate");
 
 exports.getItemProvisionData = async itemId => {
-  const item = await Item.findById(itemId).populate('owner provisionHistories');
+  const item = await Item.findById(itemId).populate("owner provisionHistories");
   const { owner, provisionHistories } = item;
 
   if (provisionHistories.length === 0) {
-    return '!HISTORY';
+    return "!HISTORY";
   }
 
   const provision = provisionHistories.map(provision => {
@@ -16,7 +16,7 @@ exports.getItemProvisionData = async itemId => {
       return provision;
     }
   })[item.provisionHistories.length - 1];
-
+  console.log(provision);
   return {
     _id: itemId,
     owner: owner.nickName,
@@ -26,10 +26,10 @@ exports.getItemProvisionData = async itemId => {
 
 exports.returnItem = async (itemId, returnDate) => {
   const item = await Item.findById(itemId)
-    .populate('itemType', 'name')
-    .populate('provisionHistories');
+    .populate("itemType", "name")
+    .populate("provisionHistories");
 
-  if (item.usageType === '재고') {
+  if (item.usageType === "재고") {
     return null;
   } else {
     const provisionId = item.provisionHistories.map(provision => {
@@ -39,21 +39,21 @@ exports.returnItem = async (itemId, returnDate) => {
     })[item.provisionHistories.length - 1]._id;
 
     const provision = await Provision.findById(provisionId).populate(
-      'memberId',
-      'nickName'
+      "memberId",
+      "nickName"
     );
 
     provision.returnDate = convertStringToDate(returnDate);
     await provision.save();
 
     item.owner = null;
-    item.usageType = '재고';
+    item.usageType = "재고";
     await item.save();
 
     return {
       item: {
         _id: item._id,
-        uniqueNumber: item.itemType.name + '_' + item.uniqueNumberForClient
+        uniqueNumber: item.itemType.name + "_" + item.uniqueNumberForClient
       },
       provision: {
         _id: provision._id,
@@ -67,16 +67,16 @@ exports.returnItem = async (itemId, returnDate) => {
 
 exports.provideItem = async (itemId, memberName, givenAt, usageType) => {
   const item = await Item.findById(itemId)
-    .populate('itemType')
-    .populate('provisionHistories');
+    .populate("itemType")
+    .populate("provisionHistories");
   const member = await Member.findOne({ nickName: memberName });
   const givenDate = convertStringToDate(givenAt);
 
   if (!member) {
-    return '!MEMBER';
+    return "!MEMBER";
   }
 
-  if (item.usageType !== '재고') {
+  if (item.usageType !== "재고") {
     return null;
   } else {
     const provision = await new Provision({
@@ -94,7 +94,7 @@ exports.provideItem = async (itemId, memberName, givenAt, usageType) => {
     return {
       item: {
         _id: item._id,
-        uniqueNumber: item.itemType.name + '_' + item.uniqueNumberForClient
+        uniqueNumber: item.itemType.name + "_" + item.uniqueNumberForClient
       },
       provision: {
         _id: provision._id,
