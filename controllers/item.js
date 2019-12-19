@@ -76,6 +76,12 @@ exports.getAllItems = catchAsync(async (req, res, next) => {
 
   if (items === 'FAILED_GET_ALL_ITEMS') {
     return next({ status: 'fail', statusCode: 400, message: 'get all items failed' });
+  } else if (items === 'ISARCHIVED_NOT_DEFINED') {
+    return next({
+      status: 'fail',
+      statusCode: 400,
+      message: 'specify isArchived querystring to either true or false'
+    });
   }
 
   res.status(200).json({
@@ -94,5 +100,14 @@ exports.getUniqueNumberForNewItem = catchAsync(async (req, res, next) => {
   res.status(200).json({
     status: 'success',
     result
+  });
+});
+
+exports.itemInfoForNewItem = catchAsync(async (req, res, next) => {
+  const results = await itemService.getItemInfoForNewItem(req);
+
+  res.status(200).json({
+    status: 'success',
+    results
   });
 });

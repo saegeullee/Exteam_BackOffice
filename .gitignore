@@ -11,6 +11,9 @@ my_settings.js
 /node_modules
 /config/google.json
 
+## Aws
+serverless.yml
+
 # Logs
 logs
 *.log
