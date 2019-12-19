@@ -21,7 +21,7 @@ const router = app => {
   app.use('/groupmeal', groupMealRouter);
   app.use('/admin', adminRouter);
 
-  app.use('/itemType', itemTypeRouter);
+  app.use('/itemtype', itemTypeRouter);
   app.use('/csv', csvRouter);
   app.use('/provision', provisionRouter);
 
