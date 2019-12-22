@@ -65,13 +65,16 @@ exports.deleteItemType = async (req, res, next) => {
     const itemTypeId = req.params.itemTypeId;
     const itemModelId = req.query.modelId;
 
+    const isDeletionSuccess = await remove(itemTypeId, itemModelId);
+
+    isDeletionSuccess === 'IN USE' &&
+      next(makeError('ItemType or ItemModel in use', 409));
+
     const deleted = itemModelId
       ? await getItemModel(itemModelId)
       : await getItemType(itemTypeId);
 
-    const isDeletionSuccess = await remove(itemTypeId, itemModelId);
-
-    isDeletionSuccess.deletedCount === 1
+    isDeletionSuccess.ok === 1
       ? res.status(200).json({ status: 'success', deleted })
       : next(makeError('Check ItemTypeId or ModelId', 400));
   } catch (err) {
