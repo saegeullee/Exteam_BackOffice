@@ -21,7 +21,8 @@ const itemSchema = new Schema(
         values: ['대여', '지급', '재고'],
         message: 'usageType은 반드시 대여, 지급, 재고 중 하나여야 합니다.'
       }
-    }
+    },
+    isDeleted: { type: Boolean, default: false }
   },
   {
     toJSON: { virtuals: true },

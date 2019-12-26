@@ -4,6 +4,7 @@ const ItemType = require('models/itemType');
 const ItemModel = require('models/itemModel');
 const Provision = require('models/provision');
 const uniqueNumberFormatter = require('utils/uniqueNumberFormatter');
+const errorMessage = require('utils/errorMessage');
 
 exports.createItem = async req => {
   let item = '';
@@ -13,7 +14,7 @@ exports.createItem = async req => {
       return item.message;
     }
   } else {
-    return 'NO_ITEM';
+    return errorMessage.NO_ITEM;
   }
 
   const insertedItem = await Item.create({
@@ -26,7 +27,7 @@ exports.createItem = async req => {
   });
 
   if (!insertedItem) {
-    return 'FAILED_CREATE_ITEM';
+    return errorMessage.FAILED_CREATE_ITEM;
   }
 
   return insertedItem;
@@ -41,7 +42,7 @@ exports.updateItem = async req => {
       item = req.body.item;
     }
   } else {
-    return 'NO_ITEM';
+    return errorMessage.NO_ITEM;
   }
 
   const updatedItem = await Item.findByIdAndUpdate(
@@ -51,17 +52,17 @@ exports.updateItem = async req => {
   );
 
   if (!updatedItem) {
-    return 'FAILED_UPDATE_ITEM';
+    return errorMessage.FAILED_UPDATE_ITEM;
   }
 
   return updatedItem;
 };
 
 exports.deleteItem = async req => {
-  const result = await Item.findByIdAndDelete(req.params.id);
+  const result = await Item.findByIdAndUpdate(req.params.id, { isDeleted: true }, { new: true });
 
   if (!result) {
-    return 'FAILED_DELETE_ITEM';
+    return errorMessage.FAILED_DELETE_ITEM;
   }
   return result;
 };
@@ -84,7 +85,7 @@ exports.getItem = async req => {
     });
 
   if (!item) {
-    return 'ITEM_DOESNT_EXIST';
+    return errorMessage.ITEM_DOESNT_EXIST;
   }
 
   return item;
@@ -93,35 +94,36 @@ exports.getItem = async req => {
 exports.getAllItems = async req => {
   let query = '';
   let requestedItemTotalNum = 0;
-  let queryCondition = {};
+  let queryCondition = { isDeleted: false };
 
   if (req.query.isArchived) {
     const isArchived = req.query.isArchived;
     if (isArchived === 'true') {
       //폐기한 모든 아이템  GET
-      queryCondition = { isArchived: true };
+      queryCondition = { ...queryCondition, isArchived: true };
       query = Item.find(queryCondition);
     } else {
       if (req.query.usageType) {
         if (decodeURI(req.query.usageType).split('"')[1] === '재고') {
-          queryCondition = { isArchived: false, usageType: '재고' };
+          queryCondition = { ...queryCondition, isArchived: false, usageType: '재고' };
           query = Item.find(queryCondition);
         } else {
           queryCondition = {
+            ...queryCondition,
             isArchived: false,
             usageType: { $in: ['지급', '대여'] }
           };
           query = Item.find(queryCondition);
         }
       } else {
-        queryCondition = { isArchived: false };
+        queryCondition = { ...queryCondition, isArchived: false };
         query = Item.find(queryCondition);
       }
     }
 
     requestedItemTotalNum = await Item.countDocuments(queryCondition);
   } else {
-    return 'ISARCHIVED_NOT_DEFINED';
+    return errorMessage.ISARCHIVED_NOT_DEFINED;
   }
 
   //정렬
@@ -149,7 +151,7 @@ exports.getAllItems = async req => {
     });
 
   if (!items) {
-    return 'FAILED_GET_ALL_ITEMS';
+    return errorMessage.FAILED_GET_ALL_ITEMS;
   }
 
   return { items, itemTotalNum: requestedItemTotalNum };
@@ -165,13 +167,20 @@ exports.getItemInfoForNewItem = async () => {
   itemTypeInfo = itemTypeInfo.map(el => {
     for (let i = 0; i < uniqueNumberForEachItemTypeArr.length; i++) {
       if (el.itemType === uniqueNumberForEachItemTypeArr[i].name) {
-        el.uniqueNumberForClient =
-          uniqueNumberForEachItemTypeArr[i].uniqueNumberForClient;
+        el.uniqueNumberForClient = uniqueNumberForEachItemTypeArr[i].uniqueNumberForClient;
         el.uniqueNumber = uniqueNumberForEachItemTypeArr[i].uniqueNumber;
       }
     }
     return el;
   });
+
+  if (!itemTypeInfo) {
+    return errorMessage.FAILED_GET_ITEM_INFO;
+  }
+
+  //특정 비품종류의 맨 처음 아이템의 고유번호
+  const formattedUniqueNumberFornewItemType = uniqueNumberFormatter.getFormattedUniqueNumber(1);
+  itemTypeInfo.push({ formattedUniqueNumberFornewItemType, uniqueNumberFornewItemType: 1 });
 
   return itemTypeInfo;
 };
@@ -185,10 +194,6 @@ const getUniqueNumberForNewItem = async () => {
       }
     }
   ]);
-
-  if (!uniqueNumberOfEachItemType) {
-    return 'FAILED_GET_UNIQUE_NUMBER';
-  }
 
   uniqueNumberOfEachItemType = await Promise.all(
     uniqueNumberOfEachItemType.map(async el => {
@@ -211,14 +216,14 @@ const validateItem = async item => {
   if (itemTypeInDB) {
     item.itemType = itemTypeInDB;
   } else {
-    item.message = 'ITEMTYPE_DOESNT_EXIST';
+    item.message = errorMessage.ITEMTYPE_DOESNT_EXIST;
   }
 
   const itemModelInDB = await ItemModel.findOne({ name: model });
   if (itemModelInDB) {
     item.model = itemModelInDB;
   } else {
-    item.message = 'ITEMMODEL_DOESNT_EXIST';
+    item.message = errorMessage.ITEMMODEL_DOESNT_EXIST;
   }
   return item;
 };

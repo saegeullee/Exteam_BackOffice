@@ -15,6 +15,7 @@ const { checkAuth } = require('controllers/slackAuth');
 const router = app => {
   app.use('/slack', slackAuthRouter);
   app.use('/access', accessRouter);
+
   // app.use(checkAuth);
 
   app.use('/member', memberRouter);

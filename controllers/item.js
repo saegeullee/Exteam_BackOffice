@@ -1,32 +1,33 @@
 const itemService = require('services/item');
 const catchAsync = require('utils/catchAsync');
+const errorMessage = require('utils/errorMessage');
 
 exports.createItem = catchAsync(async (req, res, next) => {
   const item = await itemService.createItem(req);
 
   switch (item) {
-    case 'ITEMTYPE_DOESNT_EXIST':
+    case errorMessage.ITEMTYPE_DOESNT_EXIST:
       return next({
         status: 'fail',
         statusCode: 400,
         message: "ItemType doesn't exist"
       });
-    case 'ITEMMODEL_DOESNT_EXIST':
+    case errorMessage.ITEMMODEL_DOESNT_EXIST:
       return next({
         status: 'fail',
         statusCode: 400,
         message: "ItemModel doesn't exist"
       });
-    case 'NO_ITEM':
+    case errorMessage.NO_ITEM:
       return next({
         status: 'fail',
         statusCode: 400,
-        message: 'item object must be sent with item key'
+        message: 'Item object must be sent with item key'
       });
-    case 'FAILED_CREATE_ITEM':
+    case errorMessage.FAILED_CREATE_ITEM:
       return next({
         status: 'fail',
-        statusCode: 400,
+        statusCode: 404,
         message: 'create item failed'
       });
   }
@@ -41,16 +42,16 @@ exports.updateItem = catchAsync(async (req, res, next) => {
   const item = await itemService.updateItem(req);
 
   switch (item) {
-    case 'NO_ITEM':
+    case errorMessage.NO_ITEM:
       return next({
         status: 'fail',
         statusCode: 400,
         message: 'item object must be sent with item key'
       });
-    case 'FAILED_UPDATE_ITEM':
+    case errorMessage.FAILED_UPDATE_ITEM:
       return next({
         status: 'fail',
-        statusCode: 400,
+        statusCode: 404,
         message: 'update item failed'
       });
   }
@@ -64,27 +65,27 @@ exports.updateItem = catchAsync(async (req, res, next) => {
 exports.deleteItem = catchAsync(async (req, res, next) => {
   const result = await itemService.deleteItem(req);
 
-  if (result === 'FAILED_DELETE_ITEM') {
+  if (result === errorMessage.FAILED_DELETE_ITEM) {
     return next({
       status: 'fail',
-      statusCode: 400,
+      statusCode: 404,
       message: 'delete item failed'
     });
   }
 
   res.status(200).json({
     status: 'success',
-    message: 'successfully deleted item'
+    message: result
   });
 });
 
 exports.getItem = catchAsync(async (req, res, next) => {
   const item = await itemService.getItem(req);
 
-  if (item === 'ITEM_DOESNT_EXIST') {
+  if (item === errorMessage.ITEM_DOESNT_EXIST) {
     return next({
       status: 'fail',
-      statusCode: 400,
+      statusCode: 404,
       message: "item doesn't exist"
     });
   }
@@ -98,13 +99,13 @@ exports.getItem = catchAsync(async (req, res, next) => {
 exports.getAllItems = catchAsync(async (req, res, next) => {
   const items = await itemService.getAllItems(req);
 
-  if (items === 'FAILED_GET_ALL_ITEMS') {
+  if (items === errorMessage.FAILED_GET_ALL_ITEMS) {
     return next({
       status: 'fail',
-      statusCode: 400,
+      statusCode: 404,
       message: 'get all items failed'
     });
-  } else if (items === 'ISARCHIVED_NOT_DEFINED') {
+  } else if (items === errorMessage.ISARCHIVED_NOT_DEFINED) {
     return next({
       status: 'fail',
       statusCode: 400,
@@ -117,25 +118,16 @@ exports.getAllItems = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.getUniqueNumberForNewItem = catchAsync(async (req, res, next) => {
-  const result = await itemService.getUniqueNumberForNewItem();
-
-  if (result === 'FAILED_GET_UNIQUE_NUMBER') {
-    return next({
-      status: 'fail',
-      statusCode: 400,
-      message: 'get uniqueNumbers failed'
-    });
-  }
-
-  res.status(200).json({
-    status: 'success',
-    result
-  });
-});
-
 exports.itemInfoForNewItem = catchAsync(async (req, res, next) => {
   const results = await itemService.getItemInfoForNewItem(req);
+
+  if (results === errorMessage.FAILED_GET_ITEM_INFO) {
+    return next({
+      status: 'fail',
+      statusCode: 404,
+      message: 'get item information failed'
+    });
+  }
 
   res.status(200).json({
     status: 'success',
