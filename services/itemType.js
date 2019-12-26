@@ -1,13 +1,14 @@
 const Model = require('models/itemModel');
 const ItemType = require('models/itemType');
+const Item = require('models/item');
 const { responseForItemTypes } = require('utils/response');
 const { checkItemModel } = require('utils/checkModels');
 
 exports.getList = async () => {
-  const itemTypes = await ItemType.find()
+  const itemTypes = await ItemType.find({ isDeleted: false })
     .sort('name')
     .select('_id models name')
-    .populate('models');
+    .populate({ path: 'models', match: { isDeleted: false } });
 
   return responseForItemTypes(itemTypes);
 };
@@ -88,10 +89,25 @@ exports.update = async (itemTypeId, itemModelId, itemType, itemModel) => {
   return updated;
 };
 
-exports.remove = (itemTypeId, itemModelId) => {
-  if (itemModelId) {
-    return Model.deleteOne({ _id: itemModelId });
+exports.remove = async (itemTypeId, itemModelId) => {
+  const itemList = await Item.find();
+  let existingItemType = 0;
+
+  itemList.forEach(item => {
+    if (!itemModelId && item.itemType.toString() === itemTypeId) {
+      existingItemType++;
+    } else if (itemModelId && item.model.toString() === itemModelId) {
+      existingItemType++;
+    }
+  });
+
+  if (existingItemType === 0) {
+    if (itemModelId) {
+      return await Model.updateOne({ _id: itemModelId }, { isDeleted: true });
+    } else {
+      return await ItemType.updateOne({ _id: itemTypeId }, { isDeleted: true });
+    }
   } else {
-    return ItemType.deleteOne({ _id: itemTypeId });
+    return 'IN USE';
   }
 };
