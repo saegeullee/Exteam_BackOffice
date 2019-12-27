@@ -2,7 +2,7 @@ const {
   getMemberList,
   addNewMember,
   updateMember,
-  deleteMember,
+  deleteMember
 } = require('services/member');
 
 exports.memberList = async (req, res, next) => {
@@ -38,7 +38,7 @@ exports.updateMemberDetails = async (req, res, next) => {
   try {
     const updated = await updateMember(req);
 
-    if (member) {
+    if (updated) {
       res.status(200).json({ message: 'success', updated });
     } else {
       const err = new Error('Not a member');
