@@ -19,7 +19,7 @@ exports.addMember = async (req, res, next) => {
   try {
     const created = await addNewMember(req);
 
-    if (!created instanceof Error) {
+    if (created !== 'failed') {
       res.status(200).json({ message: 'Success', created });
     } else {
       const err = new Error('Check member data');
@@ -27,6 +27,7 @@ exports.addMember = async (req, res, next) => {
       next(err);
     }
   } catch (err) {
+    console.log(err);
     const member = err.keyValue.nickName;
     err.message = `Member '${member}' already exists`;
     err.statusCode = 409;
