@@ -6,7 +6,7 @@ exports.getSlackAuth = async req => {
   const { client_id, client_secret, code } = req.query;
 
   const response = await Axios.get(
-    `https://slack.com/api/oauth.access?client_id=${client_id}&client_secret=${client_secret}&code=${code}`,
+    `https://slack.com/api/oauth.access?client_id=${client_id}&client_secret=${client_secret}&code=${code}`
   );
 
   const { email } = response.data.user;

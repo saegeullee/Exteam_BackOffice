@@ -9,18 +9,18 @@ exports.getMemberList = () => {
 
 exports.addNewMember = async req => {
   const { nickName, cell: name, enrolledIn } = req.body;
-  const cellId = await Cell.findOne({ name });
+  const cellName = await Cell.findOne({ name });
 
-  if (nickName && cellId && enrolledIn instanceof Date) {
-    const newMember = new Member({
+  if (nickName && cellName) {
+    const newMember = await new Member({
       nickName,
-      cell: cellId,
-      enrolledIn,
+      cell: cellName._id,
+      enrolledIn
     }).save();
 
     return newMember;
   } else {
-    return new Error();
+    return 'failed';
   }
 };
 
@@ -31,13 +31,13 @@ exports.updateMember = async req => {
   const cell = name ? await Cell.findOne({ name }) : null;
   const member = await Member.findOne({ _id: memberId }).populate(
     'cell',
-    '_id',
+    '_id'
   );
 
   const updates = {
     nickName: nickName || member.nickName,
     cell: cell ? cell._id : member.cell._id,
-    enrolledIn: enrolledIn || member.enrolledIn,
+    enrolledIn: enrolledIn || member.enrolledIn
   };
 
   await Member.updateOne({ _id: memberId }, updates);
@@ -48,7 +48,7 @@ exports.updateMember = async req => {
 exports.deleteMember = async memberId => {
   const toBeDeleted = await Member.findOne({ _id: memberId }).populate(
     'cell',
-    'name',
+    'name'
   );
 
   await Member.deleteOne({ _id: memberId });
