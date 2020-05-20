@@ -13,7 +13,7 @@
 - AWS를 통한 클라우드 서버 구축(EC2, DocumentDB)
 
 ## Ex-admin API 문서
-https://github.com/Exteam_BackOffice/groupmeal/wiki
+https://github.com/saegeullee/Exteam_BackOffice/wiki
 
 ## Full video
 [![Watch full video](https://img.youtube.com/vi/mdrhlrZpZHo/maxresdefault.jpg)](https://www.youtube.com/watch?v=mdrhlrZpZHo)
